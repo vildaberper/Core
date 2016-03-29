@@ -17,7 +17,7 @@ namespace file{
 
 	static const std::vector<std::string> fileSizes = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
 
-	// Converts bytes into human readable form
+	// Converts bytes into human readable form.
 	static std::string sizeReadable(const std::streampos& size){
 		double s = double(size);
 		size_t i = 0;
@@ -27,7 +27,7 @@ namespace file{
 		return (std::to_string(s) + file::fileSizes[i]);
 	}
 
-	// Lists all logical drives
+	// Lists all logical drives.
 	static std::vector<std::string> listDrives(){
 		DWORD test = GetLogicalDrives();
 		std::vector<std::string> drives;
@@ -41,7 +41,7 @@ namespace file{
 		return drives;
 	}
 
-	// Lists all files in a directory
+	// Lists all files in a directory.
 	static std::vector<std::string> listFiles(const std::string& path){
 		DIR *dir;
 		struct dirent *ent;
@@ -67,21 +67,21 @@ namespace file{
 		return files;
 	}
 
-	// Test wheather the path is a file
+	// Test wheather the path is a file.
 	static bool isFile(const std::string& path) {
 		struct stat s;
 
 		return stat(path.data(), &s) == 0 && (s.st_mode & S_IFREG) != 0;
 	}
 
-	// Test wheather the path is a directory
+	// Test wheather the path is a directory.
 	static bool isDirectory(const std::string& path) {
 		struct stat s;
 
 		return stat(path.data(), &s) == 0 && (s.st_mode & S_IFDIR) != 0;
 	}
 
-	// File or directory size in bytes
+	// File or directory size in bytes.
 	static std::streampos size(const std::string& path){
 		std::streampos size_ = 0;
 
@@ -101,7 +101,7 @@ namespace file{
 		return size_;
 	}
 
-	// File has parent (C:\parent = true, C:\ = false)
+	// File has parent (C:\parent = true, C:\ = false).
 	static bool hasParent(const std::string& path){
 		return path[path.length() - 1] != FILE_SEPARATOR;
 	}
@@ -117,7 +117,7 @@ namespace file{
 		return p;
 	}
 
-	// Child of path (C:\path\child)
+	// Child of path (C:\path\child).
 	static std::string child(const std::string& path, const std::string& child){
 		if(path[path.length() - 1] == FILE_SEPARATOR){
 			return path + child;
@@ -126,7 +126,7 @@ namespace file{
 		return path + FILE_SEPARATOR + child;
 	}
 
-	// Check if file exists
+	// Check if file exists.
 	static bool exists(const std::string& filename){
 		if(isDirectory(filename)){
 			return true;
@@ -141,7 +141,7 @@ namespace file{
 		return good;
 	}
 
-	// Create file
+	// Create file.
 	static bool create(const std::string& path){
 		if(exists(path)){
 			return false;
@@ -153,7 +153,7 @@ namespace file{
 		return isFile(path);
 	}
 
-	// Remove file
+	// Remove file.
 	static bool remove(const std::string& path){
 		if(isDirectory(path)){
 			return _rmdir(path.data()) == 0;
@@ -163,24 +163,24 @@ namespace file{
 		}
 	}
 
-	// Move file
+	// Move file.
 	static bool move(const std::string& path, const std::string& newPath){
 		return std::rename(path.data(), newPath.data()) == 0;
 	}
 
-	// Current working directory
+	// Current working directory.
 	static std::string workingDir(){
 		char dir[MAX_PATH];
 
 		return parent(std::string(dir, GetModuleFileName(nullptr, dir, MAX_PATH)));
 	}
 
-	// Create directory
+	// Create directory.
 	static bool mkdir(const std::string& path){
 		return _mkdir(path.data()) == 0;
 	}
 
-	// Create directory and all parent directories
+	// Create directory and all parent directories.
 	static bool mkdirs(const std::string& path){
 		if(!hasParent(path) || isDirectory(path)){
 			return true;
@@ -189,7 +189,7 @@ namespace file{
 		return mkdirs(parent(path)) && mkdir(path);
 	}
 
-	// Returns a vector<string> with lines read from file
+	// Returns a vector<string> with lines read from file.
 	static std::vector<std::string> readTextFile(const std::string& filename){
 		std::vector<std::string> content;
 
@@ -206,7 +206,7 @@ namespace file{
 		return content;
 	}
 
-	// Write a file with lines vector<string>
+	// Write a file with lines vector<string>.
 	static bool writeTextFile(const std::string& filename, const std::vector<std::string>& content){
 		std::ofstream ofs;
 

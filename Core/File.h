@@ -14,8 +14,10 @@ Some new features have been added such as file reading and moving.
 */
 
 class File{
+
 public:
-	// Lists all logical drives
+
+	// Lists all logical drives.
 	static std::vector<std::string> listDrives();
 
 	File(const std::string& path);
@@ -97,6 +99,9 @@ public:
 		path_ = File::child(child).path();
 		return *this;
 	}
-protected:
+
+private:
+
 	std::string path_;
+
 };
