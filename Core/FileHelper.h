@@ -15,6 +15,32 @@
 namespace file{
 	static const char FILE_SEPARATOR = '\\';
 
+	static const std::vector<std::string> fileSizes = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+
+	// Converts bytes into human readable form
+	static std::string sizeReadable(const std::streampos& size){
+		double s = double(size);
+		size_t i = 0;
+
+		for(; i < file::fileSizes.size() - 1 && s > 1024; s /= 1024, i++);
+
+		return (std::to_string(s) + file::fileSizes[i]);
+	}
+
+	// Lists all logical drives
+	static std::vector<std::string> listDrives(){
+		DWORD test = GetLogicalDrives();
+		std::vector<std::string> drives;
+
+		for(char i = 'A'; i <= 'Z'; i++){
+			if((test & (1 << (i - 'A')))){
+				drives.push_back(std::string(1, i) + ':' + FILE_SEPARATOR);
+			}
+		}
+
+		return drives;
+	}
+
 	// Lists all files in a directory
 	static std::vector<std::string> listFiles(const std::string& path){
 		DIR *dir;
@@ -37,15 +63,18 @@ namespace file{
 			closedir(dir);
 			delete ent;
 		}
+
 		return files;
 	}
 
+	// Test wheather the path is a file
 	static bool isFile(const std::string& path) {
 		struct stat s;
 
 		return stat(path.data(), &s) == 0 && (s.st_mode & S_IFREG) != 0;
 	}
 
+	// Test wheather the path is a directory
 	static bool isDirectory(const std::string& path) {
 		struct stat s;
 
@@ -64,6 +93,7 @@ namespace file{
 		}
 
 		std::ifstream file(path, std::ios_base::binary);
+
 		file.seekg(0, std::ios_base::end);
 		size_ = file.tellg();
 		file.close();
@@ -79,9 +109,11 @@ namespace file{
 	// Parent of path (C:\parent\path)
 	static std::string parent(const std::string& path){
 		std::string p = path.substr(0, path.find_last_of(FILE_SEPARATOR));
+
 		if(path.find_first_of(FILE_SEPARATOR) == path.find_last_of(FILE_SEPARATOR)){
 			p += FILE_SEPARATOR;
 		}
+
 		return p;
 	}
 
@@ -90,6 +122,7 @@ namespace file{
 		if(path[path.length() - 1] == FILE_SEPARATOR){
 			return path + child;
 		}
+
 		return path + FILE_SEPARATOR + child;
 	}
 
@@ -113,8 +146,10 @@ namespace file{
 		if(exists(path)){
 			return false;
 		}
+
 		std::ofstream out(path);
 		out.close();
+
 		return isFile(path);
 	}
 
@@ -174,6 +209,7 @@ namespace file{
 	// Write a file with lines vector<string>
 	static bool writeTextFile(const std::string& filename, const std::vector<std::string>& content){
 		std::ofstream ofs;
+
 		ofs.open(filename.data(), std::ios_base::out | std::ios_base::trunc);
 		if(ofs.is_open()){
 			for(std::string line : content){

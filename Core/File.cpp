@@ -2,6 +2,10 @@
 
 #include "FileHelper.h"
 
+std::vector<std::string> File::listDrives(){
+	return file::listDrives();
+}
+
 File::File(const std::string& path){
 	path_ = path;
 }
@@ -18,6 +22,7 @@ std::string File::name() const{
 	if(path().length() > 2 && path().at(path().length() - 1) == file::FILE_SEPARATOR && path().at(path().length() - 2) == ':'){
 		return path().substr(0, path().find_last_of(':'));
 	}
+
 	return path().substr(path().find_last_of(file::FILE_SEPARATOR) + 1);
 }
 
@@ -39,16 +44,8 @@ std::streampos File::size() const{
 	return file::size(path());
 }
 
-static const std::vector<std::string> sizes = {"B", "KB", "MB", "GB", "TB", "PB"};
-
 std::string File::sizeReadable() const{
-	double s = double(size());
-	std::string f;
-	size_t i = 0;
-
-	for(; s > 1024; s /= 1024, i++);
-
-	return (std::to_string(s) + sizes[i]);
+	return file::sizeReadable(size());
 }
 
 bool File::exists() const{

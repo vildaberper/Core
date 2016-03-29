@@ -14,23 +14,23 @@ static bool isDigits(const std::string& value){
 			return false;
 		}
 	}
+
 	return true;
 }
 
 static bool isInt(const std::string& value){
-	size_t i = 0;
-
 	if(value.length() == 0){
 		return false;
 	}
-	if(value.at(0) == '-'){
-		i = 1;
-	}
+
+	size_t i = value.at(0) == '-' ? 1 : 0;
+
 	for(; i < value.length(); i++){
 		if(!isdigit(value.at(i))){
 			return false;
 		}
 	}
+
 	return true;
 }
 
@@ -44,6 +44,7 @@ static bool isFloat(const std::string& value){
 	if(!isInt(value.substr(0, index)) || !isDigits(value.substr(index + 1))){
 		return false;
 	}
+
 	return true;
 }
 
@@ -51,12 +52,16 @@ static int h(std::string& s){
 	if(s.length() == 0){
 		return 0;
 	}
+
 	std::string::size_type i = s.find_first_not_of(' ');
+
 	if(i == std::string::npos){
 		s = "";
 		return 0;
 	}
+
 	s = s.substr(i);
+
 	return i / INDENT_WIDTH;
 }
 
@@ -86,7 +91,7 @@ public:
 
 	~ConfigurationNode(){
 		unset();
-		for(auto &ent : nodes){
+		for(const auto &ent : nodes){
 			delete ent.second;
 		}
 	}
@@ -96,27 +101,35 @@ public:
 		case TYPEBOOL:
 			delete (bool*) value;
 			break;
+
 		case TYPESTRING:
 			delete (std::string*) value;
 			break;
+
 		case TYPEFLOAT:
 			delete (float*) value;
 			break;
+
 		case TYPEINT:
 			delete (int*) value;
 			break;
+
 		case TYPEVECTORSTRING:
 			delete (std::vector<std::string>*) value;
 			break;
+
 		case TYPEVECTORFLOAT:
 			delete (std::vector<float>*) value;
 			break;
+
 		case TYPEVECTORINT:
 			delete (std::vector<int>*) value;
 			break;
+
 		default:
 			return;
 		}
+
 		type = TYPEUNDEFINED;
 		value = nullptr;
 	}
@@ -167,6 +180,7 @@ public:
 		if(type != TYPEBOOL){
 			return default_;
 		}
+
 		return *(bool*) value;
 	}
 
@@ -174,6 +188,7 @@ public:
 		if(type != TYPESTRING){
 			return default_;
 		}
+
 		return *(std::string*) value;
 	}
 
@@ -181,6 +196,7 @@ public:
 		if(type != TYPEFLOAT){
 			return default_;
 		}
+
 		return *(float*) value;
 	}
 
@@ -188,6 +204,7 @@ public:
 		if(type != TYPEINT){
 			return default_;
 		}
+
 		return *(int*) value;
 	}
 
@@ -195,6 +212,7 @@ public:
 		if(type != TYPEVECTORSTRING){
 			return default_;
 		}
+
 		return *(std::vector<std::string>*) value;
 	}
 
@@ -202,6 +220,7 @@ public:
 		if(type != TYPEVECTORFLOAT){
 			return default_;
 		}
+
 		return *(std::vector<float>*) value;
 	}
 
@@ -209,6 +228,7 @@ public:
 		if(type != TYPEVECTORINT){
 			return default_;
 		}
+
 		return *(std::vector<int>*) value;
 	}
 
@@ -218,14 +238,19 @@ public:
 
 	std::string toString() const{
 		switch(type){
+
 		case TYPEBOOL:
 			return boolValue() ? "true" : "false";
+
 		case TYPESTRING:
 			return '"' + stringValue() + '"';
+
 		case TYPEFLOAT:
 			return std::to_string(floatValue());
+
 		case TYPEINT:
 			return std::to_string(intValue());
+
 		case TYPEVECTORSTRING:
 		{
 			std::stringstream stream;
@@ -239,8 +264,10 @@ public:
 				stream << '"' << vector[i] << '"';
 			}
 			stream << '}';
+
 			return stream.str();
 		}
+
 		case TYPEVECTORFLOAT:
 		{
 			std::stringstream stream;
@@ -254,8 +281,10 @@ public:
 				stream << std::to_string(vector[i]);
 			}
 			stream << '}';
+
 			return stream.str();
 		}
+
 		case TYPEVECTORINT:
 		{
 			std::stringstream stream;
@@ -269,33 +298,42 @@ public:
 				stream << std::to_string(vector[i]);
 			}
 			stream << '}';
+
 			return stream.str();
 		}
 		}
+
 		return "";
 	}
 
 	bool parse(const std::string& value){
-		if(value == "true"){ // TYPEBOOL
-			set(true);
+		// TYPEBOOL
+		if(value == "true" || value == "false"){
+			set(value == "true");
 		}
-		else if(value == "false"){
-			set(false);
-		}
-		else if(value.at(0) == '"' && value.at(value.length() - 1) == '"'){ // TYPESTRING
+
+		// TYPESTRING
+		else if(value.at(0) == '"' && value.at(value.length() - 1) == '"'){
 			set(value.substr(1, value.length() - 2));
 		}
-		else if(isInt(value)){ // TYPEINT
+
+		// TYPEINT
+		else if(isInt(value)){
 			set(stoi(value));
 		}
-		else if(isFloat(value)){ // TYPEFLOAT
+
+		// TYPEFLOAT
+		else if(isFloat(value)){
 			set(stof(value));
 		}
+
+		// VECTOR
 		else if(value.at(0) == '{' && value.at(value.length() - 1) == '}'){
 			std::string val = value.substr(1, value.length() - 2);
 			size_t index;
 
-			if(value.at(1) == '"' && value.at(value.length() - 2) == '"'){ // TYPEVECTORSTRING
+			// TYPEVECTORSTRING
+			if(value.at(1) == '"' && value.at(value.length() - 2) == '"'){
 				std::vector<std::string> vector;
 
 				while((index = val.find_first_of(',')) != std::string::npos){
@@ -303,15 +341,20 @@ public:
 					val = val.substr(index + 1);
 					h(val);
 				}
+
 				vector.push_back(val.substr(1, val.length() - 2));
 				set(vector);
 			}
 			else{
 				std::string test = val;
+
 				index = val.find_first_of(',');
-				if(index != std::string::npos)
+				if(index != std::string::npos){
 					test = val.substr(0, index);
-				if(isInt(test)){ // TYPEVECTORINT
+				}
+
+				// TYPEVECTORINT
+				if(isInt(test)){
 					std::vector<int> vector;
 
 					while((index = val.find_first_of(',')) != std::string::npos){
@@ -319,10 +362,13 @@ public:
 						val = val.substr(index + 1);
 						h(val);
 					}
+
 					vector.push_back(stoi(val));
 					set(vector);
 				}
-				else if(isFloat(test)){ // TYPEVECTORFLOAT
+
+				// TYPEVECTORFLOAT
+				else if(isFloat(test)){
 					std::vector<float> vector;
 
 					while((index = val.find_first_of(',')) != std::string::npos){
@@ -330,17 +376,21 @@ public:
 						val = val.substr(index + 1);
 						h(val);
 					}
+
 					vector.push_back(stof(val));
 					set(vector);
 				}
+
 				else{
 					return false;
 				}
 			}
 		}
+
 		else{
 			return false;
 		}
+
 		return true;
 	}
 
@@ -350,6 +400,7 @@ public:
 		for(auto const &node : nodes){
 			children.push_back(node.first);
 		}
+
 		return children;
 	}
 
@@ -366,22 +417,27 @@ public:
 				return false;
 			}
 		}
+
 		return nodes.count(path) > 0;
 	}
 
 	ConfigurationNode& node(const std::string& path){
 		size_t index;
+
 		if((index = path.find_first_of(PATH_SEPARATOR)) != std::string::npos){
 			std::string sub = path.substr(0, index);
 
 			if(nodes.count(sub) == 0){
 				nodes[sub] = new ConfigurationNode();
 			}
+
 			return nodes[sub]->node(path.substr(index + 1));
 		}
+
 		if(nodes.count(path) == 0){
 			nodes[path] = new ConfigurationNode();
 		}
+
 		return *nodes[path];
 	}
 
@@ -394,8 +450,10 @@ public:
 			if(nodes.count(sub) == 0){
 				return;
 			}
+
 			return nodes[sub]->remove(path.substr(index + 1));
 		}
+
 		delete nodes[path];
 		nodes[path] = nullptr;
 		nodes.erase(path);
@@ -411,6 +469,7 @@ public:
 
 			lines.insert(lines.end(), next.begin(), next.end());
 		}
+
 		return lines;
 	}
 };
@@ -480,6 +539,7 @@ bool Configuration::load(const File& file){
 		}
 		indent = curIndent;
 	}
+
 	return success;
 }
 
@@ -501,6 +561,7 @@ std::vector<std::string> Configuration::children(const std::string& path, const 
 			children[i] = path + PATH_SEPARATOR + children[i];
 		}
 	}
+
 	return children;
 }
 
@@ -508,79 +569,97 @@ bool Configuration::hasValue(const std::string& path) const{
 	return root->containsNode(path) && root->node(path).hasValue();
 }
 
-void Configuration::remove(const std::string& path){
+Configuration& Configuration::remove(const std::string& path){
 	if(root->containsNode(path)){
 		root->remove(path);
 	}
+
+	return *this;
 }
 
-void Configuration::unset(const std::string& path){
+Configuration& Configuration::unset(const std::string& path){
 	if(root->containsNode(path)){
 		root->node(path).unset();
 	}
+
+	return *this;
 }
 
-void Configuration::set(const std::string& path, const bool& value){
+Configuration& Configuration::set(const std::string& path, const bool& value){
 	root->node(path).set(value);
+	return *this;
 }
-void Configuration::set(const std::string& path, const std::string& value){
+Configuration& Configuration::set(const std::string& path, const std::string& value){
 	root->node(path).set(value);
+	return *this;
 }
-void Configuration::set(const std::string& path, const float& value){
+Configuration& Configuration::set(const std::string& path, const float& value){
 	root->node(path).set(value);
+	return *this;
 }
-void Configuration::set(const std::string& path, const int& value){
+Configuration& Configuration::set(const std::string& path, const int& value){
 	root->node(path).set(value);
+	return *this;
 }
-void Configuration::set(const std::string& path, const std::vector<std::string> &value){
+Configuration& Configuration::set(const std::string& path, const std::vector<std::string> &value){
 	root->node(path).set(value);
+	return *this;
 }
-void Configuration::set(const std::string& path, const std::vector<float> &value){
+Configuration& Configuration::set(const std::string& path, const std::vector<float> &value){
 	root->node(path).set(value);
+	return *this;
 }
-void Configuration::set(const std::string& path, const std::vector<int> &value){
+Configuration& Configuration::set(const std::string& path, const std::vector<int> &value){
 	root->node(path).set(value);
+	return *this;
 }
 
 bool Configuration::boolValue(const std::string& path, const bool& default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).boolValue(default_);
 	}
+
 	return default_;
 }
 std::string Configuration::stringValue(const std::string& path, const std::string& default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).stringValue(default_);
 	}
+
 	return default_;
 }
 float Configuration::floatValue(const std::string& path, const float& default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).floatValue(default_);
 	}
+
 	return default_;
 }
 int Configuration::intValue(const std::string& path, const int& default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).intValue(default_);
 	}
+
 	return default_;
 }
 std::vector<std::string> Configuration::stringVector(const std::string& path, const std::vector<std::string>& default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).stringVector(default_);
 	}
+
 	return default_;
 }
 std::vector<float> Configuration::floatVector(const std::string& path, const std::vector<float>&  default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).floatVector(default_);
 	}
+
 	return default_;
 }
 std::vector<int> Configuration::intVector(const std::string& path, const std::vector<int>&  default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).intVector(default_);
 	}
+
 	return default_;
 }

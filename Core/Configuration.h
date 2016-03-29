@@ -23,31 +23,31 @@ public:
 	bool hasValue(const std::string& path) const;
 
 	// Remove node (and all under it)
-	void remove(const std::string& path);
+	Configuration& remove(const std::string& path);
 
 	// Unset a value to node
-	void unset(const std::string& path);
+	Configuration& unset(const std::string& path);
 
 	// Set value to node
-	void set(const std::string& path, const bool& value);
+	Configuration& set(const std::string& path, const bool& value);
 
 	// Set value to node
-	void set(const std::string& path, const std::string& value);
+	Configuration& set(const std::string& path, const std::string& value);
 
 	// Set value to node
-	void set(const std::string& path, const float& value);
+	Configuration& set(const std::string& path, const float& value);
 
 	// Set value to node
-	void set(const std::string& path, const int& value);
+	Configuration& set(const std::string& path, const int& value);
 
 	// Set value to node
-	void set(const std::string& path, const std::vector<std::string>& value);
+	Configuration& set(const std::string& path, const std::vector<std::string>& value);
 
 	// Set value to node
-	void set(const std::string& path, const std::vector<float>& value);
+	Configuration& set(const std::string& path, const std::vector<float>& value);
 
 	// Set value to node
-	void set(const std::string& path, const std::vector<int>& value);
+	Configuration& set(const std::string& path, const std::vector<int>& value);
 
 	// Get bool value from a node
 	bool boolValue(const std::string& path, const bool& default_ = false) const;

@@ -15,6 +15,9 @@ Some new features have been added such as file reading and moving.
 
 class File{
 public:
+	// Lists all logical drives
+	static std::vector<std::string> listDrives();
+
 	File(const std::string& path);
 
 	File();
