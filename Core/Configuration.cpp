@@ -60,7 +60,7 @@ static int h(std::string& s){
 	return i / INDENT_WIDTH;
 }
 
-const enum Type{
+enum Type{
 	TYPEUNDEFINED,
 	TYPEBOOL,
 	TYPESTRING,

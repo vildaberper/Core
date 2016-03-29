@@ -1,7 +1,9 @@
 #include "Logger.h"
 
+#include <stdio.h>
+
 namespace logger{
-	//sf::Clock clock;
+	sf::Clock clock;
 
 	std::vector<LogEntry> history;
 	size_t historyCount = 22;

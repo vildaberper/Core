@@ -3,37 +3,30 @@
 #include <string>
 #include <vector>
 
-const enum LogLevel{
-	INFO,
-	DEBUG,
-	WARNING,
-	FATAL,
-	TIMING
-};
+#include "SFML\System\Clock.hpp"
 
 namespace logger{
-	//extern sf::Clock clock;
+	enum LogLevel{
+		INFO,
+		DEBUG,
+		WARNING,
+		FATAL,
+		TIMING
+	};
+
+	extern sf::Clock clock;
 
 	class LogEntry{
 	public:
-		LogEntry(std::string message){
+		LogEntry(const std::string& message){
 			LogEntry::message = message;
-			//time = logger::clock.getElapsedTime();
-		}
-		~LogEntry(){
-
+			time = logger::clock.getElapsedTime();
 		}
 
-		/*float fadeValue(const sf::Time& showTime, const sf::Time& fadeTime) const{
-			if(time + showTime > logger::clock.getElapsedTime()){
-				return 1.0f;
-			}
-			float f = 1.0f - (logger::clock.getElapsedTime() - time - showTime).asSeconds() / fadeTime.asSeconds();
-			return f < 0.0f ? 0.0f : f;
-		}*/
+		~LogEntry(){ }
 
 		std::string message;
-		//sf::Time time;
+		sf::Time time;
 	};
 
 	extern std::vector<LogEntry> history;
