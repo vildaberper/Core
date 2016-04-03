@@ -1,5 +1,3 @@
-#pragma once
-
 #include <sys/stat.h>
 #include <Windows.h>
 #include <direct.h>
@@ -12,19 +10,19 @@
 
 #include "dirent.h"
 
-namespace file{
+namespace filehelper{
 	static const char FILE_SEPARATOR = '\\';
 
-	static const std::vector<std::string> fileSizes = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+	static const std::vector<std::string> FILE_SIZES = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
 
 	// Converts bytes into human readable form.
 	static std::string sizeReadable(const std::streampos& size){
 		double s = double(size);
 		size_t i = 0;
 
-		for(; i < file::fileSizes.size() - 1 && s > 1024; s /= 1024, i++);
+		for(; i < FILE_SIZES.size() - 1 && s > 1024; s /= 1024, i++);
 
-		return (std::to_string(s) + file::fileSizes[i]);
+		return (std::to_string(s) + FILE_SIZES[i]);
 	}
 
 	// Lists all logical drives.

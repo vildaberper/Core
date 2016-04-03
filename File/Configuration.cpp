@@ -1,7 +1,5 @@
 #include "Configuration.h"
 
-#include "Logger.h"
-
 #include <sstream>
 #include <map>
 
@@ -532,7 +530,9 @@ bool Configuration::load(const File& file){
 				continue;
 			}
 			if(!root->node(curPath).parse(val)){
-				logger::fatal("Failed to parse file (" + file.parent().name() + "\\" + file.name() + "): line " + std::to_string(i + 1) + " - " + line);
+				printf((
+					"Failed to parse file (" + file.path() + "): line " + std::to_string(i + 1) + " - " + line + "\n"
+					).data());
 				success = false;
 				break;
 			}

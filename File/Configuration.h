@@ -6,8 +6,11 @@
 #include "File.h"
 
 class Configuration{
+
 public:
+
 	Configuration();
+
 	~Configuration();
 
 	// Load from file
@@ -69,4 +72,5 @@ public:
 
 	// Get int vector from a node
 	std::vector<int> intVector(const std::string& path, const std::vector<int>& default_ = {}) const;
+
 };

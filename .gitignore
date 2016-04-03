@@ -49,6 +49,9 @@ Temporary Items
 # Custom
 *
 !Core
+!File
+!Graphics
+!Network
 !*.h
 !*.cpp
 !*.txt
