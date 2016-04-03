@@ -7,7 +7,7 @@ static const char PATH_SEPARATOR = '.';
 static const unsigned char INDENT_WIDTH = 2;
 
 static bool isDigits(const std::string& value){
-	for(size_t i = 0; i < value.length(); i++){
+	for(size_t i = 0; i < value.length(); ++i){
 		if(!isdigit(value.at(i))){
 			return false;
 		}
@@ -23,7 +23,7 @@ static bool isInt(const std::string& value){
 
 	size_t i = value.at(0) == '-' ? 1 : 0;
 
-	for(; i < value.length(); i++){
+	for(; i < value.length(); ++i){
 		if(!isdigit(value.at(i))){
 			return false;
 		}
@@ -255,7 +255,7 @@ public:
 			std::vector<std::string> vector = stringVector();
 
 			stream << '{';
-			for(size_t i = 0; i < vector.size(); i++){
+			for(size_t i = 0; i < vector.size(); ++i){
 				if(i > 0){
 					stream << SEPARATOR;
 				}
@@ -272,7 +272,7 @@ public:
 			std::vector<float> vector = floatVector();
 
 			stream << '{';
-			for(size_t i = 0; i < vector.size(); i++){
+			for(size_t i = 0; i < vector.size(); ++i){
 				if(i > 0){
 					stream << SEPARATOR;
 				}
@@ -289,7 +289,7 @@ public:
 			std::vector<int> vector = intVector();
 
 			stream << '{';
-			for(size_t i = 0; i < vector.size(); i++){
+			for(size_t i = 0; i < vector.size(); ++i){
 				if(i > 0){
 					stream << SEPARATOR;
 				}
@@ -494,7 +494,7 @@ bool Configuration::load(const File& file){
 	int indent = -1;
 	std::string curPath = "";
 	bool success = true;
-	for(size_t i = 0; i < lines.size(); i++){
+	for(size_t i = 0; i < lines.size(); ++i){
 		std::string line = lines[i];
 		int curIndent = h(line);
 
@@ -510,7 +510,7 @@ bool Configuration::load(const File& file){
 			curPath += (curPath.length() > 0 ? "." : "") + node;
 		}
 		else{
-			for(int s = 0; s <= indent - curIndent; s++){
+			for(int s = 0; s <= indent - curIndent; ++s){
 				size_t index = curPath.find_last_of('.');
 
 				if(index != std::string::npos){

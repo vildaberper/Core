@@ -20,7 +20,7 @@ namespace filehelper{
 		double s = double(size);
 		size_t i = 0;
 
-		for(; i < FILE_SIZES.size() - 1 && s > 1024; s /= 1024, i++);
+		for(; i < FILE_SIZES.size() - 1 && s > 1024; s /= 1024, ++i);
 
 		return (std::to_string(s) + FILE_SIZES[i]);
 	}
@@ -30,7 +30,7 @@ namespace filehelper{
 		DWORD test = GetLogicalDrives();
 		std::vector<std::string> drives;
 
-		for(char i = 'A'; i <= 'Z'; i++){
+		for(char i = 'A'; i <= 'Z'; ++i){
 			if((test & (1 << (i - 'A')))){
 				drives.push_back(std::string(1, i) + ':' + FILE_SEPARATOR);
 			}

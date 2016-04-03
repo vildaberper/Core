@@ -5,31 +5,18 @@
 #include "SFML\Network\Socket.hpp"
 #include "SFML\System\Time.hpp"
 
-class Socket{
+class Client{
 
 protected:
 
-	const sf::IpAddress ip;
-	const unsigned short port;
-
-	Socket(const sf::IpAddress& ip, const unsigned short& port):
-		ip(ip),
-		port(port){
+	Client(){
 
 	}
 
 public:
 
-	virtual ~Socket(){
-
-	}
-
-	sf::IpAddress getIp() const{
-		return ip;
-	}
-
-	unsigned short getPort() const{
-		return port;
+	virtual ~Client(){
+		
 	}
 
 	virtual bool isConnected() = 0;

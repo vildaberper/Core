@@ -1,9 +1,9 @@
 #pragma once
 
+#include "Socket.h"
+
 #include "SFML\Network\TcpListener.hpp"
 #include "SFML\Network\TcpSocket.hpp"
-
-#include "Socket.h"
 
 #include <mutex>
 
@@ -12,9 +12,13 @@ class TcpSocket: public Socket{
 private:
 
 	sf::TcpSocket* socket = nullptr;
-	std::mutex socketMutex;
+	std::mutex mutex;
 
 public:
+
+	TcpSocket(const sf::IpAddress& ip, const unsigned short& port);
+
+	virtual ~TcpSocket();
 
 	void lock();
 
