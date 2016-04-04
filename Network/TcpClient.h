@@ -13,11 +13,13 @@ private:
 
 public:
 
-	TcpClient(const sf::IpAddress& ip, const unsigned short& port);
+	TcpClient(const sf::IpAddress& ip, const unsigned short& port, ClientListener* clientListener);
 
 	virtual ~TcpClient();
 
 	virtual bool isConnected();
+
+	virtual void tick();
 
 	virtual sf::Socket::Status send(sf::Packet& packet);
 

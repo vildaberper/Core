@@ -5,12 +5,21 @@
 #include "SFML\Network\Socket.hpp"
 #include "SFML\System\Time.hpp"
 
+#include "ClientListener.h"
+
 class Client{
 
 protected:
 
-	Client(){
+	const sf::IpAddress ip;
+	const unsigned short port;
 
+	ClientListener* clientListener;
+
+	Client(const sf::IpAddress& ip, const unsigned short& port, ClientListener* clientListener):
+		ip(ip),
+		port(port){
+		Client::clientListener = clientListener;
 	}
 
 public:
@@ -19,7 +28,17 @@ public:
 		
 	}
 
+	sf::IpAddress getIp() const{
+		return ip;
+	}
+
+	unsigned short getPort() const{
+		return port;
+	}
+
 	virtual bool isConnected() = 0;
+
+	virtual void tick() = 0;
 
 	virtual sf::Socket::Status send(sf::Packet& packet) = 0;
 

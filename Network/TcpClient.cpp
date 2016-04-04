@@ -1,11 +1,27 @@
 #include "Network\TcpClient.h"
 
-TcpClient::TcpClient(const sf::IpAddress& ip, const unsigned short& port): Client(){
+TcpClient::TcpClient(const sf::IpAddress& ip, const unsigned short& port, ClientListener* clientListener):
+	Client(ip, port, clientListener){
 	socket = new TcpSocket(ip, port);
 }
 
 TcpClient::~TcpClient(){
 	delete socket;
+}
+
+void TcpClient::tick(){
+	/*
+		Incoming packets
+	*/
+	bool received = false;
+
+	do{
+		sf::Packet packet;
+
+		if(received = receive(packet) == sf::Socket::Done){
+			clientListener->on(ServerPacketEvent(packet));
+		}
+	} while(received);
 }
 
 bool TcpClient::isConnected(){

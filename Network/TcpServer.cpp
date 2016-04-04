@@ -79,7 +79,9 @@ void TcpServer::tick(){
 			serverListener->on(ClientPacketEvent(i->first, i->second->getRemoteAddress(), packet));
 			mutex.lock();
 		}
-		++i;
+		else{
+			++i;
+		}
 	}
 
 	mutex.unlock();

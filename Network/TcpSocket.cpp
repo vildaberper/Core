@@ -61,6 +61,11 @@ sf::Socket::Status TcpSocket::receive(sf::Packet& packet){
 
 	sf::Socket::Status status = socket->receive(packet);
 
+	if(status == sf::Socket::Disconnected){
+		delete socket;
+		socket = nullptr;
+	}
+
 	mutex.unlock();
 
 	return status;
