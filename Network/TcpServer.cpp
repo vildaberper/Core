@@ -42,16 +42,16 @@ void TcpServer::tick(){
 		ClientId id = nextClientId();
 		ClientConnectedEvent event = ClientConnectedEvent(id, client->getRemoteAddress());
 
+		clients.insert(std::make_pair(id, client));
+
 		mutex.unlock();
 		serverListener->on(event);
 		mutex.lock();
 
 		if(event.isCancelled()){
+			clients.erase(id);
 			client->disconnect();
 			delete client;
-		}
-		else{
-			clients.insert(std::make_pair(id, client));
 		}
 	}
 	else{

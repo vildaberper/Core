@@ -10,33 +10,21 @@ TcpSocket::~TcpSocket(){
 	disconnect();
 }
 
-void TcpSocket::lock(){
-	mutex.lock();
-}
-
-void TcpSocket::unlock(){
-	mutex.unlock();
-}
-
-sf::TcpSocket* TcpSocket::getSocket(){
-	return socket;
-}
-
-void TcpSocket::setSocket(sf::TcpSocket* socket){
-	TcpSocket::socket = socket;
-}
-
 bool TcpSocket::isConnected(){
-	mutex.lock();
+	connectedMutex.lock();
 
-	bool connected = socket != nullptr;
+	bool connected = TcpSocket::connected;
 
-	mutex.unlock();
+	connectedMutex.unlock();
 
 	return connected;
 }
 
 sf::Socket::Status TcpSocket::send(sf::Packet& packet){
+	if(!isConnected()){
+		return sf::Socket::Status::Disconnected;
+	}
+
 	mutex.lock();
 
 	if(socket == nullptr){
@@ -52,6 +40,10 @@ sf::Socket::Status TcpSocket::send(sf::Packet& packet){
 }
 
 sf::Socket::Status TcpSocket::receive(sf::Packet& packet){
+	if(!isConnected()){
+		return sf::Socket::Status::Disconnected;
+	}
+
 	mutex.lock();
 
 	if(socket == nullptr){
@@ -61,7 +53,13 @@ sf::Socket::Status TcpSocket::receive(sf::Packet& packet){
 
 	sf::Socket::Status status = socket->receive(packet);
 
-	if(status == sf::Socket::Disconnected){
+	bool disconnected = status == sf::Socket::Disconnected;
+
+	connectedMutex.lock();
+	connected = !disconnected;
+	connectedMutex.unlock();
+
+	if(disconnected){
 		delete socket;
 		socket = nullptr;
 	}
@@ -81,7 +79,13 @@ bool TcpSocket::connect(const sf::Time& timeout){
 
 	sf::Socket::Status status = (socket = new sf::TcpSocket())->connect(ip, port, timeout);
 
-	if(status != sf::Socket::Done){
+	bool connected = status == sf::Socket::Done;
+
+	connectedMutex.lock();
+	TcpSocket::connected = connected;
+	connectedMutex.unlock();
+
+	if(!connected){
 		delete socket;
 		socket = nullptr;
 	}

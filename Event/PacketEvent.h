@@ -22,7 +22,7 @@ public:
 
 	}
 
-	sf::Packet getPacket(){
+	sf::Packet& getPacket(){
 		return packet;
 	}
 

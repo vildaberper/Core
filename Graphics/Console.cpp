@@ -48,14 +48,19 @@ Console::Console(
 					break;
 
 				case sf::Event::TextEntered:
+				{
 					mutex.lock();
 					if(event.text.unicode == 13){
 						if(input.length() > 0){
-							std::string string = input;
+							ConsoleInputEvent event(input);
+
 							mutex.unlock();
-							consoleListener->on(ConsoleInputEvent(string));
+							consoleListener->on(event);
 							mutex.lock();
-							input.clear();
+
+							if(!event.isCancelled()){
+								input.clear();
+							}
 						}
 					}
 					else if(event.text.unicode == '\b'){
@@ -68,6 +73,7 @@ Console::Console(
 					}
 					mutex.unlock();
 					break;
+				}
 
 				}
 			}
@@ -149,6 +155,16 @@ void Console::println(const std::string& string){
 	}
 
 	mutex.unlock();
+}
+
+std::vector<std::string> Console::getHistory(){
+	mutex.lock();
+
+	std::vector<std::string> history(Console::history);
+
+	mutex.unlock();
+
+	return history;
 }
 
 void Console::clear(){

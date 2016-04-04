@@ -12,6 +12,9 @@ class TcpSocket:
 
 private:
 
+	bool connected = false;
+	std::mutex connectedMutex;
+
 	sf::TcpSocket* socket = nullptr;
 	std::mutex mutex;
 
@@ -20,14 +23,6 @@ public:
 	TcpSocket(const sf::IpAddress& ip, const unsigned short& port);
 
 	virtual ~TcpSocket();
-
-	void lock();
-
-	void unlock();
-
-	sf::TcpSocket* getSocket();
-
-	void setSocket(sf::TcpSocket* socket);
 
 	virtual bool isConnected();
 

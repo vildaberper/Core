@@ -55,6 +55,8 @@ public:
 
 	void println(const std::string& string);
 
+	std::vector<std::string> getHistory();
+
 	void clear();
 
 };
