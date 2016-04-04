@@ -28,7 +28,7 @@ public:
 
 	}
 
-	unsigned short getPort(){
+	unsigned short getPort() const{
 		return port;
 	}
 
