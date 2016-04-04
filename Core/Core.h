@@ -1,5 +1,5 @@
 #pragma once
 
-#include "Graphics.h"
-#include "Network.h"
-#include "File.h"
+#include "Core\Graphics.h"
+#include "Core\Network.h"
+#include "Core\File.h"

@@ -1,4 +1,4 @@
-#include "TcpClient.h"
+#include "Network\TcpClient.h"
 
 TcpClient::TcpClient(const sf::IpAddress& ip, const unsigned short& port): Client(){
 	socket = new TcpSocket(ip, port);

@@ -4,13 +4,13 @@
 #include <vector>
 
 /*
-File is a simple implementation of a file API in c++.
-All functions behave the similarly or same as the Java equivalent.
+	File is a simple implementation of a file API in c++.
+	All functions behave the similarly or same as the Java equivalent.
 
-Oracles official API was used as a reference for what functionality had to be implemented:
-https://docs.oracle.com/javase/7/docs/api/java/io/File.html
+	Oracles official API was used as a reference for what functionality had to be implemented:
+	https://docs.oracle.com/javase/7/docs/api/java/io/File.html
 
-Some new features have been added such as file reading and moving.
+	Some new features have been added such as file reading and moving.
 */
 
 class File{

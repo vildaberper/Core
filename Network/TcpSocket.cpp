@@ -1,4 +1,4 @@
-#include "TcpSocket.h"
+#include "Network\TcpSocket.h"
 
 #include "SFML\Network\TcpSocket.hpp"
 

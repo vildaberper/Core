@@ -6,15 +6,20 @@
 
 #include <vector>
 
+#include "Network\ServerListener.h"
+#include "Network\ClientId.h"
+
 class Server{
 
 protected:
 
 	const unsigned short port;
 
-	Server(const unsigned short& port):
-		port(port){
+	ServerListener* serverListener;
 
+	Server(const unsigned short& port, ServerListener* serverListener):
+		port(port){
+		Server::serverListener = serverListener;
 	}
 
 public:
@@ -27,19 +32,19 @@ public:
 		return port;
 	}
 
-	virtual std::vector<sf::IpAddress> getClients() = 0;
+	virtual std::vector<ClientId> getClients() = 0;
 
-	virtual void handleIncomingClients() = 0;
+	virtual void tick() = 0;
 
-	virtual sf::Socket::Status send(const sf::IpAddress& ip, sf::Packet& packet) = 0;
+	virtual sf::Socket::Status send(const ClientId& id, sf::Packet& packet) = 0;
 
-	virtual void sendToAllExcept(const sf::IpAddress& ip, sf::Packet& packet) = 0;
+	virtual void sendToAllExcept(const ClientId& id, sf::Packet& packet) = 0;
 
 	virtual void broadcast(sf::Packet& packet) = 0;
 
-	virtual sf::Socket::Status receive(const sf::IpAddress& ip, sf::Packet& packet) = 0;
-
 	virtual void open() = 0;
+
+	virtual bool isOpen() = 0;
 
 	virtual void close() = 0;
 

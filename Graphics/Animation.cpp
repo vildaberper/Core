@@ -1,4 +1,4 @@
-#include "Animation.h"
+#include "Graphics\Animation.h"
 
 Animation::Animation(const sf::Texture& texture, const sf::Time& frameTime, const unsigned int& x, const unsigned int& y, const unsigned int& exclude):
 	texture(texture),

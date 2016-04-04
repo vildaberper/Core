@@ -1,13 +1,14 @@
 #pragma once
 
-#include "Socket.h"
+#include "Network\Socket.h"
 
 #include "SFML\Network\TcpListener.hpp"
 #include "SFML\Network\TcpSocket.hpp"
 
 #include <mutex>
 
-class TcpSocket: public Socket{
+class TcpSocket:
+	public Socket{
 
 private:
 

@@ -1,42 +1,45 @@
 #pragma once
 
-#include "Server.h"
+#include "Network\Server.h"
 
 #include "SFML\Network\TcpListener.hpp"
 #include "SFML\Network\TcpSocket.hpp"
 
-#include <vector>
+#include <map>
 #include <mutex>
 
-class TcpServer: public Server{
+class TcpServer:
+	public Server{
 
 private:
 
-	std::vector<sf::TcpSocket*> clients;
+	std::map<ClientId, sf::TcpSocket*> clients;
 
 	sf::TcpListener listener;
 
 	std::mutex mutex;
 
+	bool listening;
+
 public:
 
-	TcpServer(const unsigned short& port);
+	TcpServer(const unsigned short& port, ServerListener* serverListener);
 
 	virtual ~TcpServer();
 
-	virtual std::vector<sf::IpAddress> getClients();
+	virtual std::vector<ClientId> getClients();
 
-	virtual void handleIncomingClients();
+	virtual void tick();
 
-	virtual sf::Socket::Status send(const sf::IpAddress& ip, sf::Packet& packet);
+	virtual sf::Socket::Status send(const ClientId& id, sf::Packet& packet);
 
-	virtual void sendToAllExcept(const sf::IpAddress& ip, sf::Packet& packet);
+	virtual void sendToAllExcept(const ClientId& id, sf::Packet& packet);
 
 	virtual void broadcast(sf::Packet& packet);
 
-	virtual sf::Socket::Status receive(const sf::IpAddress& ip, sf::Packet& packet);
-
 	virtual void open();
+
+	virtual bool isOpen();
 
 	virtual void close();
 

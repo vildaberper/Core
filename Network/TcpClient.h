@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Client.h"
+#include "Network\Client.h"
 
-#include "TcpSocket.h"
+#include "Network\TcpSocket.h"
 
-class TcpClient: public Client{
+class TcpClient:
+	public Client{
 
 private:
 
