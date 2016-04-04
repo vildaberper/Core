@@ -3,7 +3,6 @@
 #include "Event\ClientIdEvent.h"
 #include "Event\Cancellable.h"
 #include "Event\IpEvent.h"
-#include "Event\Event.h"
 
 class ClientConnectedEvent:
 	public virtual Event,

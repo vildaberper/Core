@@ -2,7 +2,6 @@
 
 #include "Event\ClientIdEvent.h"
 #include "Event\IpEvent.h"
-#include "Event\Event.h"
 
 class ClientDisconnectedEvent:
 	public virtual Event,
