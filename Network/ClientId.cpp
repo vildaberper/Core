@@ -1,4 +1,4 @@
-#include "ClientId.h"
+#include "Network\ClientId.h"
 
 #include <mutex>
 
@@ -6,7 +6,7 @@ ClientId current = 0;
 
 std::mutex mutex;
 
-extern ClientId nextClientId(){
+ClientId nextClientId(){
 	mutex.lock();
 
 	ClientId id = current++;
