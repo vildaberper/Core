@@ -2,8 +2,8 @@
 
 Console::Console(
 	const sf::Font& font,
-	ConsoleListener* consoleListener,
 	const std::string& title,
+	ConsoleListener* consoleListener,
 	const unsigned int& fontSize,
 	const unsigned int& width,
 	const unsigned int& height,
@@ -55,7 +55,7 @@ Console::Console(
 							ConsoleInputEvent event(input);
 
 							mutex.unlock();
-							consoleListener->on(event);
+							if(consoleListener != nullptr) consoleListener->on(event);
 							mutex.lock();
 
 							if(!event.isCancelled()){
@@ -84,9 +84,13 @@ Console::Console(
 			float y = window->getSize().y - text.getCharacterSize() / 2.0f;
 
 			mutex.lock();
-			text.setPosition(x, y -= text.getCharacterSize());
-			text.setString(">" + input + (clock.getElapsedTime().asMilliseconds() % 1000 < 500 ? "_" : ""));
-			window->draw(text);
+			if(!input.empty() || window->hasFocus()){
+				text.setPosition(x, y -= text.getCharacterSize());
+				text.setString(">" + input + (clock.getElapsedTime().asMilliseconds() % 1000 < 500 && window->hasFocus() ? "_" : ""));
+				window->draw(text);
+			}else{
+				y += 5;
+			}
 			for(size_t i = 1; i <= history.size(); ++i){
 				text.setPosition(x, y -= text.getCharacterSize() + 5);
 

@@ -36,8 +36,8 @@ public:
 
 	Console(
 		const sf::Font& font,
-		ConsoleListener* consoleListener,
 		const std::string& title = "Console",
+		ConsoleListener* consoleListener = nullptr,
 		const unsigned int& fontSize = 30,
 		const unsigned int& width = 800,
 		const unsigned int& height = 600,
