@@ -14,7 +14,7 @@ Console::Console(
 	Console::consoleListener = consoleListener;
 
 	text.setFont(font);
-	text.setColor(fontColor);
+	text.setFillColor(fontColor);
 	text.setCharacterSize(fontSize);
 
 	open = true;

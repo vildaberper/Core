@@ -76,7 +76,7 @@ public:
 	T pop_tail(){
 		T e = tail_->value;
 		Node<T>* previous = tail_->previous;
-
+		
 		delete tail_;
 		tail_ = previous;
 
