@@ -22,7 +22,7 @@ Console::Console(
 
 	thread = std::thread([this, consoleListener, background, width, height, title]{
 
-		window = new sf::RenderWindow(sf::VideoMode(width, height), title);
+		window = new Window(width, height, title);
 		window->setFramerateLimit(30);
 
 		while(true){

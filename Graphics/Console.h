@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SFML\Graphics\RenderWindow.hpp"
 #include "SFML\Graphics\Color.hpp"
 #include "SFML\Graphics\Font.hpp"
 #include "SFML\Graphics\Text.hpp"
@@ -11,6 +10,7 @@
 #include <mutex>
 
 #include "Graphics\ConsoleListener.h"
+#include "Graphics\Window.h"
 
 class Console{
 
@@ -29,7 +29,7 @@ private:
 	const sf::Color background;
 
 	sf::Text text;
-	sf::RenderWindow* window;
+	Window* window;
 
 	sf::Clock clock;
 
