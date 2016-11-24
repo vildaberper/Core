@@ -25,6 +25,7 @@ private:
 	std::thread thread;
 	std::vector<std::string> history;
 	std::string input;
+	bool newLine = false;
 
 	const sf::Color background;
 
@@ -54,7 +55,7 @@ public:
 
 	void print(const std::string& string);
 
-	void println(const std::string& string);
+	void println(const std::string& string = "");
 
 	std::vector<std::string> getHistory();
 

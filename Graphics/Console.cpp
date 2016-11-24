@@ -139,12 +139,13 @@ void Console::close(){
 void Console::print(const std::string& string){
 	mutex.lock();
 
-	if(history.size() > 0){
-		history[history.size() - 1].append(string.begin(), string.end());
-	}
-	else{
+	if(newLine || history.empty()){
 		history.push_back(string);
 	}
+	else{
+		history[history.size() - 1].append(string.begin(), string.end());
+	}
+	newLine = false;
 
 	mutex.unlock();
 }
@@ -152,7 +153,13 @@ void Console::print(const std::string& string){
 void Console::println(const std::string& string){
 	mutex.lock();
 
-	history.push_back(string);
+	if(newLine || history.empty()){
+		history.push_back(string);
+	}
+	else{
+		history[history.size() - 1].append(string.begin(), string.end());
+	}
+	newLine = true;
 
 	if(history.size() > 100){
 		history.erase(history.begin(), history.begin() + (history.size() - 100));
