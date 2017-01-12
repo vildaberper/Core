@@ -1,15 +1,17 @@
 #include "Console.h"
 
-Console::Console(
-	const sf::Font& font,
+bool Console::loadDefaultFont(sf::Font& font){
+	return font.loadFromFile("C:\\Windows\\Fonts\\consola.ttf");
+}
+
+void Console::run(const sf::Font& font,
 	const std::string& title,
 	ConsoleListener* consoleListener,
 	const unsigned int& fontSize,
 	const unsigned int& width,
 	const unsigned int& height,
 	const sf::Color& background,
-	const sf::Color& fontColor):
-	background(background){
+	const sf::Color& fontColor){
 
 	Console::consoleListener = consoleListener;
 
@@ -22,7 +24,8 @@ Console::Console(
 
 	thread = std::thread([this, consoleListener, background, width, height, title]{
 
-		window = new Window(width, height, title);
+		window = new Window(title, width, height);
+		window->createDefault();
 		window->setFramerateLimit(30);
 
 		while(true){
@@ -88,7 +91,8 @@ Console::Console(
 				text.setPosition(x, y -= text.getCharacterSize());
 				text.setString(">" + input + (clock.getElapsedTime().asMilliseconds() % 1000 < 500 && window->hasFocus() ? "_" : ""));
 				window->draw(text);
-			}else{
+			}
+			else{
 				y += 5;
 			}
 			for(size_t i = 1; i <= history.size(); ++i){
@@ -107,6 +111,37 @@ Console::Console(
 		}
 
 	});
+
+}
+
+Console::Console(
+	const std::string& title,
+	ConsoleListener* consoleListener,
+	const unsigned int& fontSize,
+	const unsigned int& width,
+	const unsigned int& height,
+	const sf::Color& background,
+	const sf::Color& fontColor):
+	background(background){
+
+	loadDefaultFont(font);
+	run(font, title, consoleListener, fontSize, width, height, background, fontColor);
+
+}
+
+Console::Console(
+	const File& fontFile,
+	const std::string& title,
+	ConsoleListener* consoleListener,
+	const unsigned int& fontSize,
+	const unsigned int& width,
+	const unsigned int& height,
+	const sf::Color& background,
+	const sf::Color& fontColor):
+	background(background){
+
+	font.loadFromFile(fontFile.path());
+	run(font, title, consoleListener, fontSize, width, height, background, fontColor);
 
 }
 

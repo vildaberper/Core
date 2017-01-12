@@ -1,5 +1,6 @@
 #include "File\File.h"
 
+#include "System\StringUtils.h"
 #include "File\FileHelper.cpp"
 
 std::vector<std::string> File::listDrives(){
@@ -8,6 +9,10 @@ std::vector<std::string> File::listDrives(){
 
 File::File(const std::string& path){
 	path_ = path;
+}
+
+File::File(const File& file){
+	path_ = file.path_;
 }
 
 File::File(){
@@ -27,6 +32,23 @@ File& File::operator +=(const std::string& child){
 	return *this;
 }
 
+bool File::operator <(const File& file) const{
+	return compareLess(path(), file.path());
+}
+bool File::operator <=(const File& file) const{
+	return compareLessOrEqual(path(), file.path());
+}
+bool File::operator >(const File& file) const{
+	return compareGreater(path(), file.path());
+}
+bool File::operator >=(const File& file) const{
+	return compareGreaterOrEqual(path(), file.path());
+}
+
+std::string File::relativeTo(const File& file) const{
+	return filehelper::relativeTo(file.path(), path());
+}
+
 std::string File::path() const{
 	return path_;
 }
@@ -36,7 +58,10 @@ std::string File::name() const{
 		return path().substr(0, path().find_last_of(':'));
 	}
 
-	return path().substr(path().find_last_of(filehelper::FILE_SEPARATOR) + 1);
+	size_t i = path().find_last_of(filehelper::FILE_SEPARATOR) + 1;
+	
+	if(i > path().length()) return path();
+	return path().substr(i);
 }
 
 std::string File::nameNoExtension() const{
@@ -109,8 +134,16 @@ bool File::isDirectory() const{
 	return filehelper::isDirectory(path());
 }
 
-std::vector<std::string> File::listFiles() const{
-	return filehelper::listFiles(path());
+std::vector<File> File::listFiles() const{
+	std::vector<std::string> paths = filehelper::listFiles(path());
+	std::vector<File> files;
+
+	for(const std::string& p : paths){
+		File f = File(p);
+		if(f.name()[0] != '$') files.push_back(f);
+	}
+
+	return files;
 }
 
 bool File::mkdir() const{

@@ -3,6 +3,28 @@
 #include <vector>
 
 template <typename T>
+void sort_merge(vector<T>& v){
+	size_t s = v.size();
+
+	if(s < 2) return;
+
+	size_t p = s / 2;
+
+	vector<T> l(v.begin(), v.begin() + p);
+	sort_merge(l);
+	size_t li = 0;
+
+	vector<T> r(v.begin() + p, v.end());
+	sort_merge(r);
+	size_t ri = 0;
+
+	for(size_t i = 0; i < v.size(); ++i){
+		if(li < l.size() && (ri == r.size() || l[li] <= r[ri])) v[i] = l[li++];
+		else v[i] = r[ri++];
+	}
+}
+
+template <typename T>
 void sort_insertion(std::vector<T>& vec){
 	for(size_t i = 1; i < vec.size(); ++i){
 		for(size_t j = i; j > 0 && vec[j] < vec[j - 1]; --j){

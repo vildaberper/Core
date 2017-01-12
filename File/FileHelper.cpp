@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <Shlwapi.h>
 
 #include "dirent.h"
 
@@ -23,6 +24,16 @@ namespace filehelper{
 		for(; i < FILE_SIZES.size() - 1 && s > 1024; s /= 1024, ++i);
 
 		return (std::to_string(s) + FILE_SIZES[i]);
+	}
+
+	static std::string relativeTo(const std::string& fromPath, const std::string& toPath){
+		if(fromPath[0] != toPath[0])
+			return toPath;
+
+		char result[MAX_PATH] = "";
+		PathRelativePathTo(result, fromPath.c_str(), FILE_ATTRIBUTE_DIRECTORY, toPath.c_str(), FILE_ATTRIBUTE_NORMAL);
+
+		return std::string(result);
 	}
 
 	// Lists all logical drives.

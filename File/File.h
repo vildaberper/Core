@@ -22,6 +22,8 @@ public:
 
 	File(const std::string& path);
 
+	File(const File& file);
+
 	File();
 
 	// Tests this abstract pathname for equality with the given object.
@@ -32,6 +34,14 @@ public:
 
 	// Appends the file denoted by this abstract pathname.
 	File& operator +=(const std::string& child);
+
+	bool operator <(const File& file) const;
+	bool operator <=(const File& file) const;
+	bool operator >(const File& file) const;
+	bool operator >=(const File& file) const;
+
+	// Returns a path to parameter file relative to this file.
+	std::string relativeTo(const File& file) const;
 
 	// Converts this abstract pathname into a pathname string.
 	std::string path() const;
@@ -82,7 +92,7 @@ public:
 	bool isDirectory() const;
 
 	// Returns a vector of abstract pathnames denoting the files in the directory denoted by this abstract pathname.
-	std::vector<std::string> listFiles() const;
+	std::vector<File> listFiles() const;
 
 	// Creates the directory named by this abstract pathname.
 	bool mkdir() const;

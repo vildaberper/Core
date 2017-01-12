@@ -44,6 +44,9 @@ public:
 	Configuration& set(const std::string& path, const int& value);
 
 	// Set value to node
+	Configuration& set(const std::string& path, const File& value);
+
+	// Set value to node
 	Configuration& set(const std::string& path, const std::vector<std::string>& value);
 
 	// Set value to node
@@ -51,6 +54,9 @@ public:
 
 	// Set value to node
 	Configuration& set(const std::string& path, const std::vector<int>& value);
+
+	// Set value to node
+	Configuration& set(const std::string& path, const std::vector<File>& value);
 
 	// Get bool value from a node
 	bool boolValue(const std::string& path, const bool& default_ = false) const;
@@ -64,6 +70,9 @@ public:
 	// Get int value from a node
 	int intValue(const std::string& path, const int& default_ = 0) const;
 
+	// Get file value from a node
+	File fileValue(const std::string& path, const File& default_ = File()) const;
+
 	// Get string vector from a node
 	std::vector<std::string> stringVector(const std::string& path, const std::vector<std::string>& default_ = {}) const;
 
@@ -72,5 +81,8 @@ public:
 
 	// Get int vector from a node
 	std::vector<int> intVector(const std::string& path, const std::vector<int>& default_ = {}) const;
+
+	// Get file vector from a node
+	std::vector<File> fileVector(const std::string& path, const std::vector<File>& default_ = {}) const;
 
 };

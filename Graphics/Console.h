@@ -12,6 +12,8 @@
 #include "Graphics\ConsoleListener.h"
 #include "Graphics\Window.h"
 
+#include "File\File.h"
+
 class Console{
 
 private:
@@ -27,20 +29,42 @@ private:
 	std::string input;
 	bool newLine = false;
 
-	const sf::Color background;
+	sf::Font font;
+	sf::Color background;
 
 	sf::Text text;
 	Window* window;
 
 	sf::Clock clock;
 
+	void run(const sf::Font& font,
+		const std::string& title,
+		ConsoleListener* consoleListener,
+		const unsigned int& fontSize,
+		const unsigned int& width,
+		const unsigned int& height,
+		const sf::Color& background,
+		const sf::Color& fontColor);
+
 public:
 
+	static bool loadDefaultFont(sf::Font& font);
+
 	Console(
-		const sf::Font& font,
 		const std::string& title = "Console",
 		ConsoleListener* consoleListener = nullptr,
-		const unsigned int& fontSize = 30,
+		const unsigned int& fontSize = 16,
+		const unsigned int& width = 800,
+		const unsigned int& height = 600,
+		const sf::Color& background = sf::Color::Black,
+		const sf::Color& fontColor = sf::Color::White
+	);
+
+	Console(
+		const File& fontFile,
+		const std::string& title = "Console",
+		ConsoleListener* consoleListener = nullptr,
+		const unsigned int& fontSize = 16,
 		const unsigned int& width = 800,
 		const unsigned int& height = 600,
 		const sf::Color& background = sf::Color::Black,

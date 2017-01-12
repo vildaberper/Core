@@ -13,15 +13,15 @@ static float interv(const float& f0, const float& f1){
 	return f0 > f1 ? f0 - f1 : f1 - f0;
 }
 
-static float distance2D(const float& x0, const float& y0, const float& x1, const float& y1){
+static float distance2D(const float& x0, const float& y0, const float& x1 = 0.0f, const float& y1 = 0.0f){
 	return sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2));
 }
 
-static float distance3D(const float& x0, const float& y0, const float& z0, const float& x1, const float& y1, const float& z1){
+static float distance3D(const float& x0, const float& y0, const float& z0, const float& x1 = 0.0f, const float& y1 = 0.0f, const float& z1 = 0.0f){
 	return sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2) + pow(z1 - z0, 2));
 }
 
-static float angleTo(const float& x0, const float& y0, const float& x1, const float& y1){
+static float angleTo(const float& x0, const float& y0, const float& x1 = 0.0f, const float& y1 = 0.0f){
 	return atan2(y1 - y0, x1 - x0) + (y1 - y0 < 0 ? 2.0f * PI : 0);
 }
 

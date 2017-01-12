@@ -69,9 +69,11 @@ enum Type{
 	TYPESTRING,
 	TYPEFLOAT,
 	TYPEINT,
+	TYPEFILE,
 	TYPEVECTORSTRING,
 	TYPEVECTORFLOAT,
-	TYPEVECTORINT
+	TYPEVECTORINT,
+	TYPEVECTORFILE
 };
 
 class ConfigurationNode{
@@ -112,6 +114,10 @@ public:
 			delete (int*) value;
 			break;
 
+		case TYPEFILE:
+			delete (File*) value;
+			break;
+
 		case TYPEVECTORSTRING:
 			delete (std::vector<std::string>*) value;
 			break;
@@ -122,6 +128,10 @@ public:
 
 		case TYPEVECTORINT:
 			delete (std::vector<int>*) value;
+			break;
+
+		case TYPEVECTORFILE:
+			delete (std::vector<File>*) value;
 			break;
 
 		default:
@@ -156,6 +166,12 @@ public:
 		ConfigurationNode::value = new int(value);
 	}
 
+	void ConfigurationNode::set(const File& value){
+		unset();
+		type = TYPEFILE;
+		ConfigurationNode::value = new File(value);
+	}
+
 	void ConfigurationNode::set(const std::vector<std::string> &value){
 		unset();
 		type = TYPEVECTORSTRING;
@@ -172,6 +188,12 @@ public:
 		unset();
 		type = TYPEVECTORINT;
 		ConfigurationNode::value = new std::vector<int>(value);
+	}
+
+	void ConfigurationNode::set(const std::vector<File> &value){
+		unset();
+		type = TYPEVECTORFILE;
+		ConfigurationNode::value = new std::vector<File>(value);
 	}
 
 	bool ConfigurationNode::boolValue(const bool& default_ = false) const{
@@ -206,6 +228,14 @@ public:
 		return *(int*) value;
 	}
 
+	File ConfigurationNode::fileValue(const File& default_ = File()) const{
+		if(type != TYPEFILE){
+			return default_;
+		}
+
+		return *(File*) value;
+	}
+
 	std::vector<std::string> ConfigurationNode::stringVector(const std::vector<std::string>& default_ = {}) const{
 		if(type != TYPEVECTORSTRING){
 			return default_;
@@ -230,6 +260,14 @@ public:
 		return *(std::vector<int>*) value;
 	}
 
+	std::vector<File> ConfigurationNode::fileVector(const std::vector<File>& default_ = {}) const{
+		if(type != TYPEVECTORFILE){
+			return default_;
+		}
+
+		return *(std::vector<File>*) value;
+	}
+
 	bool hasValue() const{
 		return type != TYPEUNDEFINED;
 	}
@@ -248,6 +286,9 @@ public:
 
 		case TYPEINT:
 			return std::to_string(intValue());
+
+		case TYPEFILE:
+			return "f\"" + fileValue().path() + '"';
 
 		case TYPEVECTORSTRING:
 		{
@@ -299,6 +340,23 @@ public:
 
 			return stream.str();
 		}
+
+		case TYPEVECTORFILE:
+		{
+			std::stringstream stream;
+			std::vector<File> vector = fileVector();
+
+			stream << '{';
+			for(size_t i = 0; i < vector.size(); ++i){
+				if(i > 0){
+					stream << SEPARATOR;
+				}
+				stream << "f\"" << vector[i].path() << '"';
+			}
+			stream << '}';
+
+			return stream.str();
+		}
 		}
 
 		return "";
@@ -313,6 +371,11 @@ public:
 		// TYPESTRING
 		else if(value.at(0) == '"' && value.at(value.length() - 1) == '"'){
 			set(value.substr(1, value.length() - 2));
+		}
+
+		// TYPEFILE
+		else if(value.at(0) == 'f' && value.at(value.length() - 1) == '"'){
+			set(File(value.substr(2, value.length() - 3)));
 		}
 
 		// TYPEINT
@@ -341,6 +404,19 @@ public:
 				}
 
 				vector.push_back(val.substr(1, val.length() - 2));
+				set(vector);
+			}
+			// TYPEVECTORFILE
+			else if(value.at(1) == 'f' && value.at(value.length() - 2) == '"'){
+				std::vector<File> vector;
+
+				while((index = val.find_first_of(',')) != std::string::npos){
+					vector.push_back(File(val.substr(2, index - 3)));
+					val = val.substr(index + 1);
+					h(val);
+				}
+
+				vector.push_back(val.substr(2, val.length() - 3));
 				set(vector);
 			}
 			else{
@@ -601,6 +677,10 @@ Configuration& Configuration::set(const std::string& path, const int& value){
 	root->node(path).set(value);
 	return *this;
 }
+Configuration& Configuration::set(const std::string& path, const File& value){
+	root->node(path).set(value);
+	return *this;
+}
 Configuration& Configuration::set(const std::string& path, const std::vector<std::string> &value){
 	root->node(path).set(value);
 	return *this;
@@ -610,6 +690,10 @@ Configuration& Configuration::set(const std::string& path, const std::vector<flo
 	return *this;
 }
 Configuration& Configuration::set(const std::string& path, const std::vector<int> &value){
+	root->node(path).set(value);
+	return *this;
+}
+Configuration& Configuration::set(const std::string& path, const std::vector<File> &value){
 	root->node(path).set(value);
 	return *this;
 }
@@ -642,6 +726,13 @@ int Configuration::intValue(const std::string& path, const int& default_) const{
 
 	return default_;
 }
+File Configuration::fileValue(const std::string& path, const File& default_) const{
+	if(root->containsNode(path)){
+		return root->node(path).fileValue(default_);
+	}
+
+	return default_;
+}
 std::vector<std::string> Configuration::stringVector(const std::string& path, const std::vector<std::string>& default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).stringVector(default_);
@@ -659,6 +750,13 @@ std::vector<float> Configuration::floatVector(const std::string& path, const std
 std::vector<int> Configuration::intVector(const std::string& path, const std::vector<int>&  default_) const{
 	if(root->containsNode(path)){
 		return root->node(path).intVector(default_);
+	}
+
+	return default_;
+}
+std::vector<File> Configuration::fileVector(const std::string& path, const std::vector<File>&  default_) const{
+	if(root->containsNode(path)){
+		return root->node(path).fileVector(default_);
 	}
 
 	return default_;
