@@ -3,20 +3,20 @@
 #include <vector>
 
 template <typename T>
-static void sort_quick(vector<T>& v, const size_t& low = 0, size_t high = 0){
+static void sort_quick(std::vector<T>& v, const size_t& low = 0, size_t high = 0){
 
-	static auto partition = [](vector<T>& v, const size_t& low, const size_t& high){
+	static auto partition = [](std::vector<T>& v, const size_t& low, const size_t& high){
 		size_t p = high - 1;
 
 		if(p - low == 1){
-			if(v[low] > v[p]) swap(v[low], v[p]);
+			if(v[low] > v[p]) std::swap(v[low], v[p]);
 			return p;
 		}
 
 		for(size_t i = low; i < p;){
 			if(v[i] > v[p]){
-				swap(v[p], v[--p]);
-				if(i < p) swap(v[p + 1], v[i]);
+				std::swap(v[p], v[--p]);
+				if(i < p) std::swap(v[p + 1], v[i]);
 			}
 			else ++i;
 		}
@@ -29,8 +29,8 @@ static void sort_quick(vector<T>& v, const size_t& low = 0, size_t high = 0){
 
 	size_t p = partition(v, low, high);
 
-	quicksort(v, low, p);
-	quicksort(v, p, high);
+	sort_quick(v, low, p);
+	sort_quick(v, p, high);
 }
 
 template <typename T>
