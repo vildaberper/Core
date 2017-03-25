@@ -59,7 +59,7 @@ std::string File::name() const{
 	}
 
 	size_t i = path().find_last_of(filehelper::FILE_SEPARATOR) + 1;
-	
+
 	if(i > path().length()) return path();
 	return path().substr(i);
 }
@@ -141,6 +141,19 @@ std::vector<File> File::listFiles() const{
 	for(const std::string& p : paths){
 		File f = File(p);
 		if(f.name()[0] != '$') files.push_back(f);
+	}
+
+	return files;
+}
+
+std::vector<File> File::findDeep(std::string extension) const{
+	std::vector<File> files;
+	for(const File& f : listFiles()){
+		if(f.isDirectory())
+			for(const File& r : f.findDeep(extension))
+				files.push_back(r);
+		else if(f.isFile() && endsWith(toLowercase(f.name()), "." + extension))
+			files.push_back(f);
 	}
 
 	return files;

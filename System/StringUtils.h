@@ -15,6 +15,17 @@ static std::string toUppercase(std::string s){
 	return s;
 }
 
+static bool contains(const std::string& s0, const std::string& s1, const size_t& index = 0){
+	if(s0.length() < s1.length() || s0.length() - index < s1.length()) return false;
+
+	bool equals = true;
+
+	for(size_t i = 0; equals && i < s1.length(); ++i)
+		if(s0[index + i] != s1[i]) equals = false;
+
+	return equals || contains(s0, s1, index + 1);
+}
+
 static std::vector<std::string> splitAsCommand(const std::string& s){
 	std::vector<std::string> v;
 	v.push_back("");

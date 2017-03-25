@@ -94,6 +94,9 @@ public:
 	// Returns a vector of abstract pathnames denoting the files in the directory denoted by this abstract pathname.
 	std::vector<File> listFiles() const;
 
+	// Returns a vector of abstract pathnames which matches the given extension.
+	std::vector<File> findDeep(std::string extension) const;
+
 	// Creates the directory named by this abstract pathname.
 	bool mkdir() const;
 

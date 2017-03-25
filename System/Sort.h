@@ -34,18 +34,18 @@ static void sort_quick(std::vector<T>& v, const size_t& low = 0, size_t high = 0
 }
 
 template <typename T>
-static void sort_merge(vector<T>& v){
+static void sort_merge(std::vector<T>& v){
 	size_t s = v.size();
 
 	if(s < 2) return;
 
 	size_t p = s / 2;
 
-	vector<T> l(v.begin(), v.begin() + p);
+	std::vector<T> l(v.begin(), v.begin() + p);
 	sort_merge(l);
 	size_t li = 0;
 
-	vector<T> r(v.begin() + p, v.end());
+	std::vector<T> r(v.begin() + p, v.end());
 	sort_merge(r);
 	size_t ri = 0;
 
