@@ -167,8 +167,8 @@ bool File::mkdirs() const{
 	return filehelper::mkdirs(path());
 }
 
-std::vector<std::string> File::readTextFile() const{
-	return filehelper::readTextFile(path());
+bool File::readTextFile(std::vector<std::string>& content) const{
+	return filehelper::readTextFile(path(), content);
 }
 
 bool File::writeTextFile(const std::vector<std::string>& content) const{

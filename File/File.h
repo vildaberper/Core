@@ -15,6 +15,10 @@
 
 class File{
 
+private:
+
+	std::string path_;
+
 public:
 
 	// Lists all logical drives.
@@ -104,13 +108,9 @@ public:
 	bool mkdirs() const;
 
 	// Returns a vector representing the lines of content in this file.
-	std::vector<std::string> readTextFile() const;
+	bool readTextFile(std::vector<std::string>& content) const;
 
 	// Writes the vector representing content to this file.
 	bool writeTextFile(const std::vector<std::string>& content) const;
-
-private:
-
-	std::string path_;
 
 };

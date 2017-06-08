@@ -1,11 +1,15 @@
 #pragma once
 
-#include <string>
+#include <map>
 #include <vector>
 
 #include "File\File.h"
 
-class Configuration{
+class Configuration {
+
+private:
+
+	class ConfigurationNode* root;
 
 public:
 
@@ -13,76 +17,41 @@ public:
 
 	~Configuration();
 
-	// Load from file
-	bool load(const File& file);
+	const std::map<std::string, ConfigurationNode> children(const std::string& path = "") const;
 
-	// Save to file
+	void clear();
+
+	bool remove(const std::string& path);
+
+	template<typename T> inline const T& get(const std::string& path, const T& default) const;
+
+	const int& getInt(const std::string& path, const int& default = 0) const;
+	const float& getFloat(const std::string& path, const float& default = 0.f) const;
+	const bool& getBool(const std::string& path, const bool& default = false) const;
+	const std::string& getString(const std::string& path, const std::string& default = "") const;
+	const std::vector<int>& getVectorInt(const std::string& path, const std::vector<int>& default = {}) const;
+	const std::vector<float>& getVectorFloat(const std::string& path, const std::vector<float>& default = {}) const;
+	const std::vector<bool>& getVectorBool(const std::string& path, const std::vector<bool>& default = {}) const;
+	const std::vector<std::string>& getVectorString(const std::string& path, const std::vector<std::string>& default = {}) const;
+
+	bool unset(const std::string& path);
+
+	void set(const std::string& path, const int& v);
+	void set(const std::string& path, const float& v);
+	void set(const std::string& path, const bool& v);
+	void set(const std::string& path, const std::string& v);
+	void set(const std::string& path, const char* v);
+	void set(const std::string& path, const std::vector<int>& v);
+	void set(const std::string& path, const std::vector<float>& v);
+	void set(const std::string& path, const std::vector<bool>& v);
+	void set(const std::string& path, const std::vector<std::string>& v);
+
+	bool in(std::istream& stream);
+
+	bool load(const File& file, const bool& clear = true);
+
+	void out(std::ostream& stream) const;
+
 	bool save(const File& file) const;
-
-	// Children of a node (parent.child1, parent.child2)
-	std::vector<std::string> children(const std::string& path, const bool& fullPath = true) const;
-
-	// Node has a value
-	bool hasValue(const std::string& path) const;
-
-	// Remove node (and all under it)
-	Configuration& remove(const std::string& path);
-
-	// Unset a value to node
-	Configuration& unset(const std::string& path);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const bool& value);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const std::string& value);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const float& value);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const int& value);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const File& value);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const std::vector<std::string>& value);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const std::vector<float>& value);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const std::vector<int>& value);
-
-	// Set value to node
-	Configuration& set(const std::string& path, const std::vector<File>& value);
-
-	// Get bool value from a node
-	bool boolValue(const std::string& path, const bool& default_ = false) const;
-
-	// Get string value from a node
-	std::string stringValue(const std::string& path, const std::string& default_ = "") const;
-
-	// Get float value from a node
-	float floatValue(const std::string& path, const float& default_ = 0.0f) const;
-
-	// Get int value from a node
-	int intValue(const std::string& path, const int& default_ = 0) const;
-
-	// Get file value from a node
-	File fileValue(const std::string& path, const File& default_ = File()) const;
-
-	// Get string vector from a node
-	std::vector<std::string> stringVector(const std::string& path, const std::vector<std::string>& default_ = {}) const;
-
-	// Get float vector from a node
-	std::vector<float> floatVector(const std::string& path, const std::vector<float>& default_ = {}) const;
-
-	// Get int vector from a node
-	std::vector<int> intVector(const std::string& path, const std::vector<int>& default_ = {}) const;
-
-	// Get file vector from a node
-	std::vector<File> fileVector(const std::string& path, const std::vector<File>& default_ = {}) const;
 
 };

@@ -1,763 +1,314 @@
 #include "File\Configuration.h"
 
-#include <sstream>
-#include <map>
+#include <fstream>
+#include <iostream>
 
-static const char PATH_SEPARATOR = '.';
-static const unsigned char INDENT_WIDTH = 2;
+#include "System\Util.h"
+#include "System\Output.h"
+#include "System\StringUtils.h"
 
-static bool isDigits(const std::string& value){
-	for(size_t i = 0; i < value.length(); ++i){
-		if(!isdigit(value.at(i))){
-			return false;
+const std::string FILE_INDENT = "  ";
+const char PATH_SEPARATOR = '.';
+const char VALUE_INDICATOR = ':';
+const char COMMENT_INDICATOR = '#';
+const char ENDL = '\n';
+
+enum Type { INT, FLOAT, BOOL, STRING, VINT, VFLOAT, VBOOL, VSTRING };
+
+class ConfigurationNode {
+
+private:
+
+	Type type_;
+	void* data_;
+
+	std::map<std::string, ConfigurationNode> children_;
+
+	std::vector<std::string> buildvec(const std::string& string) {
+		std::vector<std::string> elems = { "" };
+		bool inquote = false;
+		for (size_t i = 1; i < string.length() - 1; ++i) {
+			if (string[i] == '"') inquote = !inquote;
+			if (!inquote && string[i] == ',') elems.push_back("");
+			else if (inquote || string[i] != ' ') elems[elems.size() - 1] += string[i];
 		}
+		if (elems.size() == 1 && elems[0].empty()) elems.clear();
+		return elems;
 	}
 
-	return true;
-}
-
-static bool isInt(const std::string& value){
-	if(value.length() == 0){
-		return false;
-	}
-
-	size_t i = value.at(0) == '-' ? 1 : 0;
-
-	for(; i < value.length(); ++i){
-		if(!isdigit(value.at(i))){
-			return false;
-		}
-	}
-
-	return true;
-}
-
-static bool isFloat(const std::string& value){
-	size_t index = value.find_first_of('.');
-
-	if(index == std::string::npos || index == 0 || index == value.length()){
-		return false;
-	}
-
-	if(!isInt(value.substr(0, index)) || !isDigits(value.substr(index + 1))){
-		return false;
-	}
-
-	return true;
-}
-
-static int h(std::string& s){
-	if(s.length() == 0){
-		return 0;
-	}
-
-	std::string::size_type i = s.find_first_not_of(' ');
-
-	if(i == std::string::npos){
-		s = "";
-		return 0;
-	}
-
-	s = s.substr(i);
-
-	return i / INDENT_WIDTH;
-}
-
-enum Type{
-	TYPEUNDEFINED,
-	TYPEBOOL,
-	TYPESTRING,
-	TYPEFLOAT,
-	TYPEINT,
-	TYPEFILE,
-	TYPEVECTORSTRING,
-	TYPEVECTORFLOAT,
-	TYPEVECTORINT,
-	TYPEVECTORFILE
-};
-
-class ConfigurationNode{
 public:
-	static const char SEPARATOR = ',';
 
-	Type type = TYPEUNDEFINED;
-	void* value = nullptr;
+	ConfigurationNode() { data_ = nullptr; }
 
-	std::map<std::string, ConfigurationNode*> nodes;
+	~ConfigurationNode() { unset(); children_.clear(); }
 
-	ConfigurationNode(){
+	bool hasChildren() const { return !children_.empty(); }
 
-	}
+	const std::map<std::string, ConfigurationNode>& children() const { return children_; }
 
-	~ConfigurationNode(){
-		unset();
-		for(const auto &ent : nodes){
-			delete ent.second;
+	ConfigurationNode* getNode(const std::string& path) {
+		if (path.empty()) return this;
+
+		size_t i = path.find_first_of(PATH_SEPARATOR);
+		if (i == std::string::npos) {
+			if (children_.count(path)) return &children_[path];
+			return nullptr;
 		}
+		std::string sub = path.substr(0, i);
+		if (children_.count(sub)) return children_[sub].getNode(path.substr(i + 1));
+		return nullptr;
 	}
 
-	void ConfigurationNode::unset(){
-		switch(type){
-		case TYPEBOOL:
-			delete (bool*) value;
-			break;
+	ConfigurationNode* createNode(const std::string& path) {
+		if (path.empty()) return this;
 
-		case TYPESTRING:
-			delete (std::string*) value;
-			break;
+		size_t i = path.find_first_of(PATH_SEPARATOR);
+		if (i == std::string::npos) return &children_[path];
+		return children_[path.substr(0, i)].createNode(path.substr(i + 1));
+	}
 
-		case TYPEFLOAT:
-			delete (float*) value;
-			break;
-
-		case TYPEINT:
-			delete (int*) value;
-			break;
-
-		case TYPEFILE:
-			delete (File*) value;
-			break;
-
-		case TYPEVECTORSTRING:
-			delete (std::vector<std::string>*) value;
-			break;
-
-		case TYPEVECTORFLOAT:
-			delete (std::vector<float>*) value;
-			break;
-
-		case TYPEVECTORINT:
-			delete (std::vector<int>*) value;
-			break;
-
-		case TYPEVECTORFILE:
-			delete (std::vector<File>*) value;
-			break;
-
-		default:
-			return;
+	bool removeNode(const std::string& path) {
+		size_t i = path.find_first_of(PATH_SEPARATOR);
+		if (i == std::string::npos) return children_.erase(path) > 0;
+		else {
+			std::string sub = path.substr(0, i);
+			if (children_.count(sub)) return children_[sub].removeNode(path.substr(i + 1));
 		}
-
-		type = TYPEUNDEFINED;
-		value = nullptr;
+		return false;
 	}
 
-	void ConfigurationNode::set(const bool& value){
-		unset();
-		type = TYPEBOOL;
-		ConfigurationNode::value = new bool(value);
-	}
+	inline bool hasValue() const { return data_ != nullptr; }
 
-	void ConfigurationNode::set(const std::string& value){
-		unset();
-		type = TYPESTRING;
-		ConfigurationNode::value = new std::string(value);
-	}
+	template <typename T> inline const T& get() const { return *cast<T>(data_); }
 
-	void ConfigurationNode::set(const float& value){
-		unset();
-		type = TYPEFLOAT;
-		ConfigurationNode::value = new float(value);
-	}
-
-	void ConfigurationNode::set(const int& value){
-		unset();
-		type = TYPEINT;
-		ConfigurationNode::value = new int(value);
-	}
-
-	void ConfigurationNode::set(const File& value){
-		unset();
-		type = TYPEFILE;
-		ConfigurationNode::value = new File(value);
-	}
-
-	void ConfigurationNode::set(const std::vector<std::string> &value){
-		unset();
-		type = TYPEVECTORSTRING;
-		ConfigurationNode::value = new std::vector<std::string>(value);
-	}
-
-	void ConfigurationNode::set(const std::vector<float> &value){
-		unset();
-		type = TYPEVECTORFLOAT;
-		ConfigurationNode::value = new std::vector<float>(value);
-	}
-
-	void ConfigurationNode::set(const std::vector<int> &value){
-		unset();
-		type = TYPEVECTORINT;
-		ConfigurationNode::value = new std::vector<int>(value);
-	}
-
-	void ConfigurationNode::set(const std::vector<File> &value){
-		unset();
-		type = TYPEVECTORFILE;
-		ConfigurationNode::value = new std::vector<File>(value);
-	}
-
-	bool ConfigurationNode::boolValue(const bool& default_ = false) const{
-		if(type != TYPEBOOL){
-			return default_;
-		}
-
-		return *(bool*) value;
-	}
-
-	std::string ConfigurationNode::stringValue(const std::string& default_ = "") const{
-		if(type != TYPESTRING){
-			return default_;
-		}
-
-		return *(std::string*) value;
-	}
-
-	float ConfigurationNode::floatValue(const float& default_ = 0.0f) const{
-		if(type != TYPEFLOAT){
-			return default_;
-		}
-
-		return *(float*) value;
-	}
-
-	int ConfigurationNode::intValue(const int& default_ = 0) const{
-		if(type != TYPEINT){
-			return default_;
-		}
-
-		return *(int*) value;
-	}
-
-	File ConfigurationNode::fileValue(const File& default_ = File()) const{
-		if(type != TYPEFILE){
-			return default_;
-		}
-
-		return *(File*) value;
-	}
-
-	std::vector<std::string> ConfigurationNode::stringVector(const std::vector<std::string>& default_ = {}) const{
-		if(type != TYPEVECTORSTRING){
-			return default_;
-		}
-
-		return *(std::vector<std::string>*) value;
-	}
-
-	std::vector<float> ConfigurationNode::floatVector(const std::vector<float>& default_ = {}) const{
-		if(type != TYPEVECTORFLOAT){
-			return default_;
-		}
-
-		return *(std::vector<float>*) value;
-	}
-
-	std::vector<int> ConfigurationNode::intVector(const std::vector<int>& default_ = {}) const{
-		if(type != TYPEVECTORINT){
-			return default_;
-		}
-
-		return *(std::vector<int>*) value;
-	}
-
-	std::vector<File> ConfigurationNode::fileVector(const std::vector<File>& default_ = {}) const{
-		if(type != TYPEVECTORFILE){
-			return default_;
-		}
-
-		return *(std::vector<File>*) value;
-	}
-
-	bool hasValue() const{
-		return type != TYPEUNDEFINED;
-	}
-
-	std::string toString() const{
-		switch(type){
-
-		case TYPEBOOL:
-			return boolValue() ? "true" : "false";
-
-		case TYPESTRING:
-			return '"' + stringValue() + '"';
-
-		case TYPEFLOAT:
-			return std::to_string(floatValue());
-
-		case TYPEINT:
-			return std::to_string(intValue());
-
-		case TYPEFILE:
-			return "f\"" + fileValue().path() + '"';
-
-		case TYPEVECTORSTRING:
-		{
-			std::stringstream stream;
-			std::vector<std::string> vector = stringVector();
-
-			stream << '{';
-			for(size_t i = 0; i < vector.size(); ++i){
-				if(i > 0){
-					stream << SEPARATOR;
-				}
-				stream << '"' << vector[i] << '"';
+	inline bool unset() {
+		if (data_) {
+			switch (type_) {
+			case INT: delete cast<int>(data_); break;
+			case FLOAT: delete cast<float>(data_); break;
+			case BOOL: delete cast<bool>(data_); break;
+			case STRING: delete cast<std::string>(data_); break;
+			case VINT: delete cast<std::vector<int>>(data_); break;
+			case VFLOAT: delete cast<std::vector<float>>(data_); break;
+			case VBOOL: delete cast<std::vector<bool>>(data_); break;
+			case VSTRING: delete cast<std::vector<std::string>>(data_); break;
 			}
-			stream << '}';
-
-			return stream.str();
+			data_ = nullptr;
+			return true;
 		}
-
-		case TYPEVECTORFLOAT:
-		{
-			std::stringstream stream;
-			std::vector<float> vector = floatVector();
-
-			stream << '{';
-			for(size_t i = 0; i < vector.size(); ++i){
-				if(i > 0){
-					stream << SEPARATOR;
-				}
-				stream << std::to_string(vector[i]);
-			}
-			stream << '}';
-
-			return stream.str();
-		}
-
-		case TYPEVECTORINT:
-		{
-			std::stringstream stream;
-			std::vector<int> vector = intVector();
-
-			stream << '{';
-			for(size_t i = 0; i < vector.size(); ++i){
-				if(i > 0){
-					stream << SEPARATOR;
-				}
-				stream << std::to_string(vector[i]);
-			}
-			stream << '}';
-
-			return stream.str();
-		}
-
-		case TYPEVECTORFILE:
-		{
-			std::stringstream stream;
-			std::vector<File> vector = fileVector();
-
-			stream << '{';
-			for(size_t i = 0; i < vector.size(); ++i){
-				if(i > 0){
-					stream << SEPARATOR;
-				}
-				stream << "f\"" << vector[i].path() << '"';
-			}
-			stream << '}';
-
-			return stream.str();
-		}
-		}
-
-		return "";
+		return false;
 	}
 
-	bool parse(const std::string& value){
-		// TYPEBOOL
-		if(value == "true" || value == "false"){
-			set(value == "true");
+	void set(const int& v) { unset(); type_ = INT; data_ = new int(v); }
+	void set(const float& v) { unset(); type_ = FLOAT; data_ = new float(v); }
+	void set(const bool& v) { unset(); type_ = BOOL; data_ = new bool(v); }
+	void set(const std::string& v) { unset(); type_ = STRING; data_ = new std::string(v); } void set(const char* v) { set(std::string(v)); }
+	void set(const std::vector<int>& v) { unset(); type_ = VINT; data_ = new std::vector<int>(v); }
+	void set(const std::vector<float>& v) { unset(); type_ = VFLOAT; data_ = new std::vector<float>(v); }
+	void set(const std::vector<bool>& v) { unset(); type_ = VBOOL; data_ = new std::vector<bool>(v); }
+	void set(const std::vector<std::string>& v) { unset(); type_ = VSTRING; data_ = new std::vector<std::string>(v); }
+
+	std::string str() const {
+		std::string result;
+		if (!data_) return result;
+		switch (type_) {
+		case INT: return toString(get<int>());
+		case FLOAT: return toString(get<float>());
+		case BOOL: return toString(get<bool>());
+		case STRING: return toString(get<std::string>());
+		case VINT: return toString(get<std::vector<int>>());
+		case VFLOAT: return toString(get<std::vector<float>>());
+		case VBOOL: return toString(get<std::vector<bool>>());
+		case VSTRING: return toString(get<std::vector<std::string>>());
 		}
+		return result;
+	}
 
-		// TYPESTRING
-		else if(value.at(0) == '"' && value.at(value.length() - 1) == '"'){
-			set(value.substr(1, value.length() - 2));
-		}
-
-		// TYPEFILE
-		else if(value.at(0) == 'f' && value.at(value.length() - 1) == '"'){
-			set(File(value.substr(2, value.length() - 3)));
-		}
-
-		// TYPEINT
-		else if(isInt(value)){
-			set(stoi(value));
-		}
-
-		// TYPEFLOAT
-		else if(isFloat(value)){
-			set(stof(value));
-		}
-
-		// VECTOR
-		else if(value.at(0) == '{' && value.at(value.length() - 1) == '}'){
-			std::string val = value.substr(1, value.length() - 2);
-			size_t index;
-
-			// TYPEVECTORSTRING
-			if(value.at(1) == '"' && value.at(value.length() - 2) == '"'){
-				std::vector<std::string> vector;
-
-				while((index = val.find_first_of(',')) != std::string::npos){
-					vector.push_back(val.substr(1, index - 2));
-					val = val.substr(index + 1);
-					h(val);
-				}
-
-				vector.push_back(val.substr(1, val.length() - 2));
-				set(vector);
-			}
-			// TYPEVECTORFILE
-			else if(value.at(1) == 'f' && value.at(value.length() - 2) == '"'){
-				std::vector<File> vector;
-
-				while((index = val.find_first_of(',')) != std::string::npos){
-					vector.push_back(File(val.substr(2, index - 3)));
-					val = val.substr(index + 1);
-					h(val);
-				}
-
-				vector.push_back(val.substr(2, val.length() - 3));
-				set(vector);
-			}
-			else{
-				std::string test = val;
-
-				index = val.find_first_of(',');
-				if(index != std::string::npos){
-					test = val.substr(0, index);
-				}
-
-				// TYPEVECTORINT
-				if(isInt(test)){
-					std::vector<int> vector;
-
-					while((index = val.find_first_of(',')) != std::string::npos){
-						vector.push_back(stoi(val.substr(0, index)));
-						val = val.substr(index + 1);
-						h(val);
-					}
-
-					vector.push_back(stoi(val));
-					set(vector);
-				}
-
-				// TYPEVECTORFLOAT
-				else if(isFloat(test)){
-					std::vector<float> vector;
-
-					while((index = val.find_first_of(',')) != std::string::npos){
-						vector.push_back(stof(val.substr(0, index)));
-						val = val.substr(index + 1);
-						h(val);
-					}
-
-					vector.push_back(stof(val));
-					set(vector);
-				}
-
-				else{
-					return false;
+	bool parse(std::string string) {
+		string = trim(string);
+		if (isint(string)) set(stoi(string));
+		else if (isfloat(string)) set(stof(string));
+		else if (isbool(string)) set(stob(string));
+		else if (isstring(string)) set(stos(string));
+		else {
+			Type type = INT;
+			if (string.length() > 2 && string[0] == '(') {
+				size_t typeindex = string.find_first_of(')');
+				if (typeindex != std::string::npos) {
+					std::string tmp = string.substr(1, typeindex - 1);
+					string = string.substr(typeindex + 1);
+					if (tmp == "int") type = VINT;
+					else if (tmp == "float") type = VFLOAT;
+					else if (tmp == "bool") type = VBOOL;
+					else if (tmp == "string") type = VSTRING;
 				}
 			}
-		}
+			if (isvector(string)) {
+				std::vector<std::string> elems = buildvec(string);
+				if (type < VINT) {
+					if (elems.empty()) return false;
+					else if (isint(elems[0])) type = VINT;
+					else if (isfloat(elems[0])) type = VFLOAT;
+					else if (isbool(elems[0])) type = VBOOL;
+					else if (isstring(elems[0])) type = VSTRING;
+				}
 
-		else{
-			return false;
+				switch (type) {
+				case VINT: {
+					std::vector<int> v;
+					for (const std::string& s : elems) v.push_back(stoi(s));
+					set(v);
+					break;
+				}
+				case VFLOAT: {
+					std::vector<float> v;
+					for (const std::string& s : elems) v.push_back(stof(s));
+					set(v);
+					break;
+				}
+				case VBOOL: {
+					std::vector<bool> v;
+					for (const std::string& s : elems) v.push_back(stob(s));
+					set(v);
+					break;
+				}
+				case VSTRING: {
+					std::vector<std::string> v;
+					for (const std::string& s : elems) v.push_back(stos(s));
+					set(v);
+					break;
+				}
+				default: return false;
+				}
+			}
+			else return false;
 		}
-
 		return true;
 	}
 
-	std::vector<std::string> children() const{
-		std::vector<std::string> children;
-
-		for(auto const &node : nodes){
-			children.push_back(node.first);
-		}
-
-		return children;
-	}
-
-	bool containsNode(const std::string& path) const{
-		size_t index;
-
-		if((index = path.find_first_of(PATH_SEPARATOR)) != std::string::npos){
-			std::string sub = path.substr(0, index);
-
-			if(nodes.count(sub) > 0){
-				return nodes.at(sub)->containsNode(path.substr(index + 1));
-			}
-			else{
-				return false;
-			}
-		}
-
-		return nodes.count(path) > 0;
-	}
-
-	ConfigurationNode& node(const std::string& path){
-		size_t index;
-
-		if((index = path.find_first_of(PATH_SEPARATOR)) != std::string::npos){
-			std::string sub = path.substr(0, index);
-
-			if(nodes.count(sub) == 0){
-				nodes[sub] = new ConfigurationNode();
-			}
-
-			return nodes[sub]->node(path.substr(index + 1));
-		}
-
-		if(nodes.count(path) == 0){
-			nodes[path] = new ConfigurationNode();
-		}
-
-		return *nodes[path];
-	}
-
-	void remove(const std::string& path){
-		size_t index;
-
-		if((index = path.find_first_of(PATH_SEPARATOR)) != std::string::npos){
-			std::string sub = path.substr(0, index);
-
-			if(nodes.count(sub) == 0){
-				return;
-			}
-
-			return nodes[sub]->remove(path.substr(index + 1));
-		}
-
-		delete nodes[path];
-		nodes[path] = nullptr;
-		nodes.erase(path);
-	}
-
-	std::vector<std::string> contents(const std::string& ind){
-		std::vector<std::string> lines;
-
-		for(std::string n : children()){
-			lines.push_back(ind + n + ":" + (node(n).hasValue() ? (" " + node(n).toString()) : ""));
-
-			std::vector<std::string> next = node(n).contents(ind + "  ");
-
-			lines.insert(lines.end(), next.begin(), next.end());
-		}
-
-		return lines;
-	}
 };
 
-ConfigurationNode* root;
+Configuration::Configuration() { root = new ConfigurationNode(); }
 
-Configuration::Configuration(){
-	root = new ConfigurationNode();
+Configuration::~Configuration() { delete root; }
+
+const std::map<std::string, ConfigurationNode> Configuration::children(const std::string& path) const {
+	ConfigurationNode* n = root->getNode(path);
+	if (n) return n->children();
+	return{};
 }
 
-Configuration::~Configuration(){
-	delete root;
+void Configuration::clear() { delete root; root = new ConfigurationNode(); }
+
+bool Configuration::remove(const std::string& path) { return root->removeNode(path); }
+
+template<typename T> inline const T& Configuration::get(const std::string& path, const T& default) const {
+	ConfigurationNode* n = root->getNode(path);
+	if (n && n->hasValue()) return n->get<T>();
+	return default;
 }
 
-bool Configuration::load(const File& file){
-	delete root;
-	root = new ConfigurationNode();
+const int& Configuration::getInt(const std::string& path, const int& default) const { return get<int>(path, default); }
+const float& Configuration::getFloat(const std::string& path, const float& default) const { return get<float>(path, default); }
+const bool& Configuration::getBool(const std::string& path, const bool& default) const { return get<bool>(path, default); }
+const std::string& Configuration::getString(const std::string& path, const std::string& default) const { return get<std::string>(path, default); }
+const std::vector<int>& Configuration::getVectorInt(const std::string& path, const std::vector<int>& default) const { return get<std::vector<int>>(path, default); }
+const std::vector<float>& Configuration::getVectorFloat(const std::string& path, const std::vector<float>& default) const { return get<std::vector<float>>(path, default); }
+const std::vector<bool>& Configuration::getVectorBool(const std::string& path, const std::vector<bool>& default) const { return get<std::vector<bool>>(path, default); }
+const std::vector<std::string>& Configuration::getVectorString(const std::string& path, const std::vector<std::string>& default) const { return get<std::vector<std::string>>(path, default); }
 
-	if(!file.isFile()){
-		return false;
-	}
+bool Configuration::unset(const std::string& path) {
+	ConfigurationNode* n = root->getNode(path);
+	if (n) return n->unset();
+	return false;
+}
 
-	std::vector<std::string> lines = file.readTextFile();
-	int indent = -1;
-	std::string curPath = "";
+void Configuration::set(const std::string& path, const int& v) { root->createNode(path)->set(v); }
+void Configuration::set(const std::string& path, const float& v) { root->createNode(path)->set(v); }
+void Configuration::set(const std::string& path, const bool& v) { root->createNode(path)->set(v); }
+void Configuration::set(const std::string& path, const std::string& v) { root->createNode(path)->set(v); }
+void Configuration::set(const std::string& path, const char* v) { set(path, std::string(v)); }
+void Configuration::set(const std::string& path, const std::vector<int>& v) { root->createNode(path)->set(v); }
+void Configuration::set(const std::string& path, const std::vector<float>& v) { root->createNode(path)->set(v); }
+void Configuration::set(const std::string& path, const std::vector<bool>& v) { root->createNode(path)->set(v); }
+void Configuration::set(const std::string& path, const std::vector<std::string>& v) { root->createNode(path)->set(v); }
+
+void err_parse(const std::string& message, const size_t& num, const std::string& line, const std::string& level = "error") {
+	outc << "Parse " << level << ": line " << num << " [" << message << "] (" << line << ')' << std::endl;
+}
+
+bool Configuration::in(std::istream& stream) {
 	bool success = true;
-	for(size_t i = 0; i < lines.size(); ++i){
-		std::string line = lines[i];
-		int curIndent = h(line);
+	size_t num = 0;
+	std::string line;
+	std::vector<ConfigurationNode*> cnode = { root };
+	size_t cdepth = 0;
+	while (std::getline(stream, line)) {
+		++num;
 
-		if(line.length() == 0 || line.at(0) == '#'){
-			continue;
+		size_t depth = stripStartCount(line, FILE_INDENT) + 1;
+		size_t value_index = line.find_first_of(VALUE_INDICATOR);
+		size_t comment_index = line.find_first_not_of(' ');
+
+		if (comment_index == std::string::npos || line[comment_index] == COMMENT_INDICATOR) continue;
+
+		if (value_index == std::string::npos) {
+			err_parse("no value inducator found", num, line);
+			return false;
 		}
 
-		size_t colIndex = line.find_first_of(":");
-		std::string node = line.substr(0, colIndex);
-		std::string val;
+		std::string name = trim(line.substr(0, value_index));
+		std::string value = trim(line.substr(value_index + 1));
 
-		if(indent < curIndent){
-			curPath += (curPath.length() > 0 ? "." : "") + node;
+		if (depth > cdepth && depth != ++cdepth) {
+			err_parse("bad indentation", num, line);
+			return false;
 		}
-		else{
-			for(int s = 0; s <= indent - curIndent; ++s){
-				size_t index = curPath.find_last_of('.');
+		else if (depth < cdepth) cdepth = depth;
 
-				if(index != std::string::npos){
-					curPath = curPath.substr(0, index);
-				}
-				else{
-					curPath = "";
-					break;
-				}
-			}
-			curPath += (curPath.length() > 0 ? "." : "") + node;
+		ConfigurationNode* node = cnode[cdepth - 1]->createNode(name);
+		if (cnode.size() <= cdepth) cnode.push_back(node);
+		else cnode[cdepth] = node;
+		if (!value.empty() && value[0] != COMMENT_INDICATOR && !node->parse(value)) {
+			err_parse("bad value", num, line, "warning");
+			success = false;
 		}
-		if(line.length() > colIndex + 1){
-			val = line.substr(colIndex + 1);
-			h(val);
-			if(val.length() == 0 || val.at(0) == '#'){
-				continue;
-			}
-			if(!root->node(curPath).parse(val)){
-				printf((
-					"Failed to parse file (" + file.path() + "): line " + std::to_string(i + 1) + " - " + line + "\n"
-					).data());
-				success = false;
-				break;
-			}
-		}
-		indent = curIndent;
 	}
-
 	return success;
 }
 
-bool Configuration::save(const File& file) const{
-	return file.writeTextFile(root->contents(""));
-}
+bool Configuration::load(const File& file, const bool& clear) {
+	std::ifstream ifs;
+	ifs.open(file.path().data(), std::ios_base::in);
+	if (!ifs.is_open()) return false;
+	if (clear) Configuration::clear();
 
-std::vector<std::string> Configuration::children(const std::string& path, const bool& fullPath) const{
-	std::vector<std::string> children;
-
-	if(root->containsNode(path)){
-		children = root->node(path).children();
-	}
-	else if(path.length() == 0){
-		children = root->children();
-	}
-	if(path.length() > 0 && fullPath){
-		for(size_t i = 0; i < children.size(); i++){
-			children[i] = path + PATH_SEPARATOR + children[i];
-		}
+	if (!in(ifs)) {
+		outc << "In file: " << file.path() << std::endl;
+		return false;
 	}
 
-	return children;
+	return true;
 }
 
-bool Configuration::hasValue(const std::string& path) const{
-	return root->containsNode(path) && root->node(path).hasValue();
+void out_(std::ostream& ofs, const ConfigurationNode& node, const std::string& name, const size_t& depth = 0) {
+	for (size_t i = 0; i < depth; ++i) ofs << FILE_INDENT;
+	ofs << name << VALUE_INDICATOR;
+	if (node.hasValue()) ofs << ' ' << node.str();
+	ofs << ENDL;
+	for (auto const& child : node.children()) out_(ofs, child.second, child.first, depth + 1);
 }
 
-Configuration& Configuration::remove(const std::string& path){
-	if(root->containsNode(path)){
-		root->remove(path);
-	}
-
-	return *this;
+void Configuration::out(std::ostream& stream) const {
+	for (auto const& child : root->children()) out_(stream, child.second, child.first);
 }
 
-Configuration& Configuration::unset(const std::string& path){
-	if(root->containsNode(path)){
-		root->node(path).unset();
-	}
+bool Configuration::save(const File& file) const {
+	std::ofstream ofs;
+	ofs.open(file.path().data(), std::ios_base::out | std::ios_base::trunc);
+	if (!ofs.is_open()) return false;
 
-	return *this;
-}
+	out(ofs);
 
-Configuration& Configuration::set(const std::string& path, const bool& value){
-	root->node(path).set(value);
-	return *this;
-}
-Configuration& Configuration::set(const std::string& path, const std::string& value){
-	root->node(path).set(value);
-	return *this;
-}
-Configuration& Configuration::set(const std::string& path, const float& value){
-	root->node(path).set(value);
-	return *this;
-}
-Configuration& Configuration::set(const std::string& path, const int& value){
-	root->node(path).set(value);
-	return *this;
-}
-Configuration& Configuration::set(const std::string& path, const File& value){
-	root->node(path).set(value);
-	return *this;
-}
-Configuration& Configuration::set(const std::string& path, const std::vector<std::string> &value){
-	root->node(path).set(value);
-	return *this;
-}
-Configuration& Configuration::set(const std::string& path, const std::vector<float> &value){
-	root->node(path).set(value);
-	return *this;
-}
-Configuration& Configuration::set(const std::string& path, const std::vector<int> &value){
-	root->node(path).set(value);
-	return *this;
-}
-Configuration& Configuration::set(const std::string& path, const std::vector<File> &value){
-	root->node(path).set(value);
-	return *this;
-}
-
-bool Configuration::boolValue(const std::string& path, const bool& default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).boolValue(default_);
-	}
-
-	return default_;
-}
-std::string Configuration::stringValue(const std::string& path, const std::string& default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).stringValue(default_);
-	}
-
-	return default_;
-}
-float Configuration::floatValue(const std::string& path, const float& default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).floatValue(default_);
-	}
-
-	return default_;
-}
-int Configuration::intValue(const std::string& path, const int& default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).intValue(default_);
-	}
-
-	return default_;
-}
-File Configuration::fileValue(const std::string& path, const File& default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).fileValue(default_);
-	}
-
-	return default_;
-}
-std::vector<std::string> Configuration::stringVector(const std::string& path, const std::vector<std::string>& default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).stringVector(default_);
-	}
-
-	return default_;
-}
-std::vector<float> Configuration::floatVector(const std::string& path, const std::vector<float>&  default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).floatVector(default_);
-	}
-
-	return default_;
-}
-std::vector<int> Configuration::intVector(const std::string& path, const std::vector<int>&  default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).intVector(default_);
-	}
-
-	return default_;
-}
-std::vector<File> Configuration::fileVector(const std::string& path, const std::vector<File>&  default_) const{
-	if(root->containsNode(path)){
-		return root->node(path).fileVector(default_);
-	}
-
-	return default_;
+	return true;
 }
