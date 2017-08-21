@@ -237,7 +237,8 @@ void err_parse(const std::string& message, const size_t& num, const std::string&
 	outc << "Parse " << level << ": line " << num << " [" << message << "] (" << line << ')' << std::endl;
 }
 
-bool Configuration::in(std::istream& stream) {
+bool Configuration::in(std::istream& stream, const bool& clear) {
+	if (clear) Configuration::clear();
 	bool success = true;
 	size_t num = 0;
 	std::string line;
@@ -281,9 +282,8 @@ bool Configuration::load(const File& file, const bool& clear) {
 	std::ifstream ifs;
 	ifs.open(file.path().data(), std::ios_base::in);
 	if (!ifs.is_open()) return false;
-	if (clear) Configuration::clear();
 
-	if (!in(ifs)) {
+	if (!in(ifs, clear)) {
 		outc << "In file: " << file.path() << std::endl;
 		return false;
 	}

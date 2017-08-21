@@ -46,7 +46,7 @@ public:
 	void set(const std::string& path, const std::vector<bool>& v);
 	void set(const std::string& path, const std::vector<std::string>& v);
 
-	bool in(std::istream& stream);
+	bool in(std::istream& stream, const bool& clear = true);
 
 	bool load(const File& file, const bool& clear = true);
 
