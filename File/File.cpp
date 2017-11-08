@@ -113,6 +113,10 @@ bool File::rename(const std::string& name) const{
 	return filehelper::move(path(), parent().path() + filehelper::FILE_SEPARATOR + name);
 }
 
+bool File::createHardLink(const File& file) const{
+	return filehelper::createHardLink(path(), file.path());
+}
+
 bool File::move(const File& file) const{
 	return filehelper::move(path(), file.path());
 }

@@ -64,6 +64,11 @@ namespace filehelper {
 		return files;
 	}
 
+	// Make hard link of a file.
+	static bool createHardLink(const std::string& existingPath, const std::string& path) {
+		return CreateHardLink(path.c_str(), existingPath.c_str(), NULL) != 0;
+	}
+
 	// Test wheather the path is a file.
 	static bool isFile(const std::string& path) {
 		struct stat s;

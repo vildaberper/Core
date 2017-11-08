@@ -83,6 +83,9 @@ public:
 	// Renames the file denoted by this abstract pathname.
 	bool rename(const std::string& name) const;
 
+	// Creates a hard link to this file denoted by the abstract pathname.
+	bool createHardLink(const File& file) const;
+
 	// Moves the file denoted by this abstract pathname.
 	bool move(const File& file) const;
 
