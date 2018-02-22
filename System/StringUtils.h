@@ -17,14 +17,19 @@ static std::string toUppercase(std::string string) {
 }
 
 static bool contains(const std::string& string, const std::string& val, const size_t& index = 0) {
-	if (string.length() < val.length() || string.length() - index < val.length()) return false;
+	return string.find(val, index) != std::string::npos;
+}
 
-	bool equals = true;
+static std::string replaceAll(const std::string& string, const std::string& toReplace, const std::string& replacement = "") {
+	std::string result = string;
+	size_t index = 0;
 
-	for (size_t i = 0; equals && i < val.length(); ++i)
-		if (string[index + i] != val[i]) equals = false;
+	while ((index = result.find(toReplace, index)) != std::string::npos) {
+		result.replace(index, toReplace.size(), replacement);
+		index += replacement.size();
+	}
 
-	return equals || contains(string, val, index + 1);
+	return result;
 }
 
 static std::vector<std::string> splitAsCommand(const std::string& string, const char& splitChar = ' ') {
