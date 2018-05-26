@@ -5,6 +5,56 @@
 
 #include "File\File.h"
 
+class ConfigurationNode {
+
+private:
+
+	enum Type { INT, FLOAT, BOOL, STRING, VINT, VFLOAT, VBOOL, VSTRING };
+
+	Type type_;
+	void* data_;
+
+	std::map<std::string, ConfigurationNode> children_;
+
+	std::vector<std::string> buildvec(const std::string& string);
+
+public:
+
+	ConfigurationNode();
+
+	~ConfigurationNode();
+
+	bool hasChildren() const;
+
+	const std::map<std::string, ConfigurationNode>& children() const;
+
+	ConfigurationNode* getNode(const std::string& path);
+
+	ConfigurationNode* createNode(const std::string& path);
+
+	bool removeNode(const std::string& path);
+
+	inline bool hasValue() const;
+
+	template <typename T> inline const T& get() const;
+
+	inline bool unset();
+
+	void set(const int& v);
+	void set(const float& v);
+	void set(const bool& v);
+	void set(const std::string& v); void set(const char* v);
+	void set(const std::vector<int>& v);
+	void set(const std::vector<float>& v);
+	void set(const std::vector<bool>& v);
+	void set(const std::vector<std::string>& v);
+
+	std::string str() const;
+
+	bool parse(std::string string);
+
+};
+
 class Configuration {
 
 private:
